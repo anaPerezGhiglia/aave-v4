@@ -2,7 +2,20 @@
 
 **Hardhat version installed:** `^3.1.10`
 **Migration date:** 2026-03-03
-**Verdict:** **Failed** — 2 tests fail due to a `vm.readCallers()` behavioral difference in Hardhat 3 EDR. Additionally, 139 functions (signature + body, 149 test instances) were fully commented out due to unsupported `vm.eip712HashStruct`/`vm.eip712HashType` cheatcodes.
+
+---
+
+**Verdict:** ❌ **Failed**
+
+### Blockers
+- ❌ `vm.readCallers()` returns wrong `CallerMode` inside `vm.startPrank()` — 2 tests actively failing ([local bug report](bugs/edr-vm-readCallers-prank-state.md), not yet filed upstream)
+- 🚩 `vm.eip712HashStruct()` / `vm.eip712HashType()` unsupported — 149 test instances (139 functions) commented out; entire EIP-712 signature layer is untested
+
+### Notable gaps (non-blocking)
+- 🚩 No equivalent for `forge bind --alloy` (Rust bindings) or `forge build --extra-output-files abi` (ABI export) — `rs:bind`, `rs:abis`, `rs:generate` scripts have no Hardhat counterpart
+- 🚩 Gas snapshot tests (`forge snapshot`) not supported
+- 🚩 Inline test config (`/// forge-config:`) silently ignored — `isolate` per-profile/per-file and `disable_block_gas_limit` have no equivalent
+- 🟡 Etherscan verification: Hardhat uses a single API v2 key vs Foundry's per-chain keys
 
 ---
 
