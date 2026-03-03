@@ -33,7 +33,7 @@
 | forge-std cheatcodes (`vm.*`) — general | Native | Supported via EDR | **Full** |
 | `vm.eip712HashStruct(string,bytes)` | Native | **Unsupported** | **Gap** — [NomicFoundation/hardhat#5041](https://github.com/NomicFoundation/hardhat/issues/5041) (or similar) |
 | `vm.eip712HashType(string)` | Native | **Unsupported** | **Gap** — same issue |
-| `vm.readCallers()` + `pausePrank` modifier | Native | Behavioral difference in EDR | **Gap** — `CallerMode.RecurrentPrank` not recognized correctly in some contexts |
+| `vm.readCallers()` + `pausePrank` modifier | Native | Behavioral difference in EDR | **Bug** — `CallerMode.RecurrentPrank` not returned while `vm.startPrank` is active — [bug report](bugs/edr-vm-readCallers-prank-state.md) |
 | `allowInternalExpectRevert` | Per-test via `forge-config:` | Set globally in `test.solidity` | **Full** (set globally) |
 | `isolate` | Per-test via `forge-config:` | Supported globally via `test.solidity.isolate` | **Partial** — cannot scope per test file |
 | `fsPermissions` | Array format | `fsPermissions` object format | **Full** |
@@ -116,6 +116,8 @@ Covered by the same functions as above (the same helpers call both cheatcodes).
 
 The `pausePrank` modifier in `tests/Base.t.sol` calls `vm.readCallers()` and conditionally calls `vm.stopPrank()`. In Hardhat 3 EDR, `vm.readCallers()` does not reliably return `CallerMode.RecurrentPrank` during an active `vm.startPrank`, so `vm.stopPrank()` is never called, leaving the prank active when `vm.prank(SPOKE_ADMIN)` runs inside `_updateLiquidationFee`.
 
+This is a confirmed EDR bug — `vm.readCallers()` returns `(CallerMode.None, address(0), address(0))` inside an active `vm.startPrank()` instead of `(CallerMode.RecurrentPrank, sender, txOrigin)`. A structured bug report has been filed for the Hardhat/NomicFoundation team: **[`.claude/bugs/edr-vm-readCallers-prank-state.md`](bugs/edr-vm-readCallers-prank-state.md)**.
+
 These tests are **not** commented out — they are actively failing and represent a blocker.
 
 | File | Function | Error |
@@ -133,7 +135,7 @@ Features the project **actually uses** that have no Hardhat 3 equivalent:
 |---|---|---|
 | `vm.eip712HashStruct(string,bytes)` | **High** — 131 test instances disabled. All EIP-712 signature tests for SignatureGateway, TakerPositionManager, TokenizationSpoke WithSig flows are skipped. | [NomicFoundation/hardhat](https://github.com/NomicFoundation/hardhat/issues) |
 | `vm.eip712HashType(string)` | **High** — 18 test instances disabled (type hash constant tests). | Same issue |
-| `vm.readCallers()` — `pausePrank` modifier | **Medium** — affects tests that call config helpers inside `vm.startPrank` contexts. | EDR behavioral difference |
+| `vm.readCallers()` — `pausePrank` modifier | **Medium** — affects tests that call config helpers inside `vm.startPrank` contexts. | **Bug** — [bug report filed](bugs/edr-vm-readCallers-prank-state.md) |
 | Gas snapshot tests (`forge snapshot` / `[profile.gas]`) | **Medium** — `tests/gas/` tests run (no errors from this), but gas snapshots can't be generated or checked. | [#7769](https://github.com/NomicFoundation/hardhat/issues/7769) |
 | `isolate` per-test-file | **Low** — gas tests have `/// forge-config: default.isolate = true` which is silently ignored. Tests still run. | [#7355](https://github.com/NomicFoundation/hardhat/issues/7355) |
 | Inline `forge-config:` test settings | **Low** — 10 files use `/// forge-config:` (isolate, allow_internal_expect_revert, disable_block_gas_limit). The `allow_internal_expect_revert` was set globally as a workaround. `isolate` has no per-file equivalent. `disable_block_gas_limit` has no known equivalent. | [#7355](https://github.com/NomicFoundation/hardhat/issues/7355) |
@@ -163,4 +165,4 @@ Features the project **actually uses** that have no Hardhat 3 equivalent:
 ### Recommended next steps
 1. Track `vm.eip712HashStruct`/`vm.eip712HashType` support in Hardhat — this is the single most impactful blocker
 2. Consider implementing EIP-712 hashing in a Solidity helper contract as a workaround (avoids the cheatcode dependency)
-3. For `pausePrank` behavioral difference — consider filing a Hardhat EDR issue for `vm.readCallers()` returning unexpected `CallerMode` values
+3. For `pausePrank` behavioral difference — EDR bug documented in [`.claude/bugs/edr-vm-readCallers-prank-state.md`](bugs/edr-vm-readCallers-prank-state.md); file upstream at <https://github.com/NomicFoundation/hardhat/issues>
