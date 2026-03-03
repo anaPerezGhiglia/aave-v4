@@ -2,6 +2,7 @@
 
 **Hardhat version installed:** `^3.1.10`
 **Migration date:** 2026-03-03
+**Foundry analysis:** [Foundry analysis](aave-v4-foundry-migration-analysis.md)
 
 ---
 
