@@ -1,12 +1,15 @@
 {
   "name": "aave-v4",
   "version": "0.5.9",
+  "type": "module",
   "scripts": {
     "lint": "prettier . --check",
     "lint:fix": "prettier . --write",
     "rs:bind": "forge bind --bindings-path ./out/__BINDINGS__ --alloy --skip '(tests|scripts)/**/*.sol'",
     "rs:abis": "forge build --out ./out/__FOLDER_ABIS__ --skip '(tests|scripts)/**/*.sol' --extra-output-files abi && rm -rf ./out/__ABIS__ && mkdir -p ./out/__ABIS__ && find ./out/__FOLDER_ABIS__ -name '*.abi.json' -exec cp {} ./out/__ABIS__/ \\;",
     "rs:generate": "npm run rs:bind && npm run rs:abis",
+    "build-hardhat": "npx hardhat compile",
+    "test-hardhat": "npx hardhat test solidity",
     "prepare": "husky"
   },
   "keywords": [],
@@ -17,6 +20,8 @@
   },
   "homepage": "https://github.com/aave/aave-v4#readme",
   "devDependencies": {
+    "hardhat": "^3.1.10",
+    "@nomicfoundation/hardhat-verify": "^3.0.11",
     "husky": "9.1.7",
     "lint-staged": "16.2.3",
     "prettier": "3.7.4",

@@ -2,6 +2,9 @@
 cache/
 out/
 
+# Hardhat
+artifacts/
+
 # general
 .env
 
