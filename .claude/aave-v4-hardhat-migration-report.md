@@ -23,34 +23,36 @@
 
 ## 2. Feature Parity Table
 
-| Feature | Forge | Hardhat 3 | Parity |
-|---|---|---|---|
-| Solidity compilation | `forge build` | `npx hardhat compile` | **Full** |
-| Unit & integration tests | `forge test` | `npx hardhat test solidity` | **Full** (for non-EIP-712-sig tests) |
-| Fuzz testing | auto-detects `testFuzz_*` / `function test*` with params | Built-in | **Full** |
-| `remappings.txt` | Native | Auto-loaded | **Full** |
-| `src/` / `tests/` absolute imports | Via remappings | Added `src/=./src/` `tests/=./tests/` `lib/=./lib/` | **Full** |
-| forge-std cheatcodes (`vm.*`) — general | Native | Supported via EDR | **Full** |
-| `vm.eip712HashStruct(string,bytes)` | Native | **Unsupported** | **Gap** — [NomicFoundation/hardhat#5041](https://github.com/NomicFoundation/hardhat/issues/5041) (or similar) |
-| `vm.eip712HashType(string)` | Native | **Unsupported** | **Gap** — same issue |
-| `vm.readCallers()` + `pausePrank` modifier | Native | Behavioral difference in EDR | **Bug** — `CallerMode.RecurrentPrank` not returned while `vm.startPrank` is active — [bug report](bugs/edr-vm-readCallers-prank-state.md) |
-| `allowInternalExpectRevert` | Per-test via `forge-config:` | Set globally in `test.solidity` | **Full** (set globally) |
-| `isolate` | Per-test via `forge-config:` | Supported globally via `test.solidity.isolate` | **Partial** — cannot scope per test file |
-| `fsPermissions` | Array format | `fsPermissions` object format | **Full** |
-| `gasLimit` | `gas_limit = 1099511627776` | `gasLimit: 1099511627776n` | **Full** |
-| Per-file compiler overrides | `compilation_restrictions` (exact files) | `solidity.overrides` | **Full** (for exact files) |
-| Glob overrides (`tests/**`) | `compilation_restrictions` glob | **Not supported** | **Gap** — [#4686](https://github.com/NomicFoundation/hardhat/issues/4686) |
-| Build profiles | `[profile.coverage]` | `solidity.profiles.coverage` | **Full** |
-| Fuzz profiles (pr, ci) | `[profile.pr.fuzz]`, `[profile.ci.fuzz]` | No test settings in build profiles | **Gap** — use env vars or CLI args |
-| Gas snapshot tests | `forge snapshot` / `[profile.gas]` | **Not supported** | **Gap** — [#7769](https://github.com/NomicFoundation/hardhat/issues/7769) |
-| `isolate` in gas tests | `[profile.gas]` `isolate = true` | No per-profile test settings | **Gap** — [#7355](https://github.com/NomicFoundation/hardhat/issues/7355) |
-| Inline test config (`/// forge-config:`) | Native | **Silently ignored** | **Gap** — [#7355](https://github.com/NomicFoundation/hardhat/issues/7355) |
-| `dynamic_test_linking` | Native | **No equivalent** | **Gap** — Foundry-only |
-| `[bind_json]` | Generates `JsonBindings.sol` | **No equivalent** | **Gap** — Foundry-only |
-| Formatter | `forge fmt` | Not available | **Gap** — use prettier/solhint |
-| Deployment scripts | `forge script` (`.s.sol`) | No equivalent | **N/A** — project has no `script/` directory |
-| Rust bindings / ABI export | `rs:bind`, `rs:abis` scripts | No equivalent | **N/A** — Forge-specific workflow |
-| Etherscan verification | `forge verify-contract` (per-chain keys) | `hardhat-verify` (single API v2 key) | **Partial** — key model differs |
+| Feature | Forge | Hardhat 3 | Parity | Workaround / Notes |
+|---|---|---|---|---|
+| `vm.readCallers()` + `pausePrank` modifier | Native | Behavioral difference in EDR | ❌ **Bug** | [Local bug report](bugs/edr-vm-readCallers-prank-state.md) (not yet filed upstream) — fix needed in EDR; test code is correct and not modified |
+| `vm.eip712HashStruct(string,bytes)` | Native | Unsupported | 🚩 **Gap** | No tracking issue found — consider filing one; workaround: implement EIP-712 hashing in a Solidity helper to remove the cheatcode dependency |
+| `vm.eip712HashType(string)` | Native | Unsupported | 🚩 **Gap** | Same as above — no tracking issue found |
+| Rust bindings (`forge bind --alloy`) | `rs:bind` script | No equivalent command | 🚩 **Gap** | Run the `alloy` CLI separately against ABI files extracted from Hardhat artifacts |
+| Rust ABI export (`forge build --extra-output-files abi`) | `rs:abis` script | No `--extra-output-files` flag | 🚩 **Gap** | ABIs are in `artifacts/**/*.json`; write a custom extraction script to replicate the current `find … cp` pipeline |
+| Glob overrides (`tests/**`) | `compilation_restrictions` glob | Not supported | 🚩 **Gap** | [#4686](https://github.com/NomicFoundation/hardhat/issues/4686) — list files individually; no-op here since default compiler settings already match the restriction |
+| Fuzz profiles (`[profile.pr.fuzz]`, `[profile.ci.fuzz]`) | `[profile.pr.fuzz]`, `[profile.ci.fuzz]` | No test settings in build profiles | 🚩 **Gap** | Pass `--fuzz-runs N` on the CLI or use an env var per CI job |
+| Gas snapshot tests | `forge snapshot` / `[profile.gas]` | Not supported | 🚩 **Gap** | [#7769](https://github.com/NomicFoundation/hardhat/issues/7769) — no workaround currently |
+| `isolate` | `[profile.gas]` `isolate = true` / `/// forge-config:` per-test | No per-profile or per-file test settings; global `test.solidity.isolate` works | 🚩 **Gap** | [#7355](https://github.com/NomicFoundation/hardhat/issues/7355) — global setting is a partial workaround but cannot be scoped per profile or per file |
+| Inline test config (`/// forge-config:`) | Native | Silently ignored | 🚩 **Gap** | [#7355](https://github.com/NomicFoundation/hardhat/issues/7355) — `allow_internal_expect_revert` set globally as workaround; `isolate` and `disable_block_gas_limit` have no equivalent |
+| `dynamic_test_linking` | Native | No equivalent | 🚩 **Gap** | Foundry-only — no observable impact in Hardhat test runs |
+| `[bind_json]` | Generates `JsonBindings.sol` | No equivalent | 🚩 **Gap** | Foundry-only — `JsonBindings.sol` is pre-generated and committed; not regeneratable from Hardhat |
+| Formatter | `forge fmt` | Not available | 🚩 **Gap** | Already using prettier + prettier-plugin-solidity — no action needed |
+| Etherscan verification | `forge verify-contract` (per-chain API keys) | `hardhat-verify` (single API v2 key) | 🟡 **Partial** | Etherscan API v2 accepts one key across all supported chains — consolidate CI secrets to a single `ETHERSCAN_API_KEY` |
+| Solidity compilation | `forge build` | `npx hardhat compile` | ✅ **Full** | |
+| Unit & integration tests | `forge test` | `npx hardhat test solidity` | ✅ **Full** | Non-EIP-712-sig tests only; sig tests commented out due to `vm.eip712HashStruct` gap |
+| Fuzz testing | auto-detects `testFuzz_*` / `function test*` with params | Built-in | ✅ **Full** | |
+| `remappings.txt` | Native | Auto-loaded | ✅ **Full** | |
+| `src/` / `tests/` absolute imports | Via remappings | Added `src/=./src/` `tests/=./tests/` `lib/=./lib/` | ✅ **Full** | |
+| forge-std cheatcodes (`vm.*`) — general | Native | Supported via EDR | ✅ **Full** | |
+| `allowInternalExpectRevert` | Per-test via `forge-config:` | Set globally in `test.solidity` | ✅ **Full** | Set globally — affects all tests, no known downside for this project |
+| `fsPermissions` | Array format | `fsPermissions` object format | ✅ **Full** | |
+| `gasLimit` | `gas_limit = 1099511627776` | `gasLimit: 1099511627776n` | ✅ **Full** | |
+| Per-file compiler overrides | `compilation_restrictions` (exact files) | `solidity.overrides` | ✅ **Full** | |
+| Build profiles | `[profile.coverage]` | `solidity.profiles.coverage` | ✅ **Full** | |
+
+**Features not used by this project** (no parity assessment needed):
+- Deployment scripts (`forge script` / `.s.sol`) — project has no `script/` directory
 
 ---
 
