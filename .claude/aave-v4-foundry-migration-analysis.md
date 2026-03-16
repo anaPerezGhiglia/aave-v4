@@ -124,7 +124,7 @@ Found in 10 files:
 
 ## Absolute Imports
 
-**None found.** All imports use relative paths or package-style paths.
+**220+ files** use absolute imports with single-quoted `src/` and `tests/` prefixes (e.g., `import 'src/dependencies/openzeppelin/SafeERC20.sol'`). 55 files in `src/`, 165 files in `tests/`. One file also uses `lib/erc4626-tests/...` directly. Remappings needed: `src/=./src/`, `tests/=./tests/`, `lib/=./lib/`.
 
 ## zkSync
 
