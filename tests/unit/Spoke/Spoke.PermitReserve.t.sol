@@ -54,28 +54,29 @@ contract SpokePermitReserveTest is SpokeBase {
     );
   }
 
-  function test_permitReserve() public {
-    (address user, uint256 userPk) = makeAddrAndKey('user');
-
-    assertEq(tokenList.dai.allowance(user, address(spoke1)), 0);
-
-    EIP712Types.Permit memory params = EIP712Types.Permit({
-      owner: user,
-      spender: address(spoke1),
-      value: 100e18,
-      deadline: vm.randomUint(1, MAX_SKIP_TIME),
-      nonce: tokenList.dai.nonces(user)
-    });
-    vm.warp(params.deadline - 1);
-
-    bytes32 digest = _getTypedDataHash(tokenList.dai, params);
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, digest);
-
-    vm.expectEmit(address(tokenList.dai));
-    emit IERC20.Approval(user, address(spoke1), params.value);
-    vm.prank(vm.randomAddress());
-    spoke1.permitReserve(_daiReserveId(spoke1), user, params.value, params.deadline, v, r, s);
-
-    assertEq(tokenList.dai.allowance(user, address(spoke1)), params.value);
-  }
+  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
+  // function test_permitReserve() public {
+  //   (address user, uint256 userPk) = makeAddrAndKey('user');
+  //
+  //   assertEq(tokenList.dai.allowance(user, address(spoke1)), 0);
+  //
+  //   EIP712Types.Permit memory params = EIP712Types.Permit({
+  //     owner: user,
+  //     spender: address(spoke1),
+  //     value: 100e18,
+  //     deadline: vm.randomUint(1, MAX_SKIP_TIME),
+  //     nonce: tokenList.dai.nonces(user)
+  //   });
+  //   vm.warp(params.deadline - 1);
+  //
+  //   bytes32 digest = _getTypedDataHash(tokenList.dai, params);
+  //   (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, digest);
+  //
+  //   vm.expectEmit(address(tokenList.dai));
+  //   emit IERC20.Approval(user, address(spoke1), params.value);
+  //   vm.prank(vm.randomAddress());
+  //   spoke1.permitReserve(_daiReserveId(spoke1), user, params.value, params.deadline, v, r, s);
+  //
+  //   assertEq(tokenList.dai.allowance(user, address(spoke1)), params.value);
+  // }
 }
