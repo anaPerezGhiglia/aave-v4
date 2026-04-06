@@ -88,8 +88,9 @@ export default defineConfig({
       // gas_limit = 1099511627776 (must be bigint)
       gasLimit: 1099511627776n,
 
-      // Inline forge-config: default.allow_internal_expect_revert = true at contract-level
-      // does not work in Hardhat 3.3.0 (only at test-level). Setting globally as workaround.
+      // 3 contracts use contract-level `forge-config: default.allow_internal_expect_revert = true`.
+      // Hardhat 3.3.0 supports inline config at function level only — contract-level directives are
+      // silently ignored. Setting globally as workaround (safe — behaviorally neutral for other tests).
       allowInternalExpectRevert: true,
     },
   },
@@ -146,12 +147,15 @@ export default defineConfig({
   // Foundry-only settings (no Hardhat equivalent)
   // ============================================================================
   // - dynamic_test_linking = true → Foundry-only
-  // - gas_snapshot_check = false → Not supported. See: https://github.com/NomicFoundation/hardhat/issues/7769
-  // - [profile.gas] (isolate, gas_snapshot_check, test='tests/gas') → Not supported. See: https://github.com/NomicFoundation/hardhat/issues/7769
+  // - gas_snapshot_check = false → Use `npx hardhat test solidity --snapshot` / `--snapshot-check`
+  //   See: https://hardhat.org/docs/guides/testing/gas-snapshots
+  //   Note: snapshot group names must use alphanumeric chars, hyphens, underscores, spaces only (no dots)
+  // - [profile.gas] (isolate, test='tests/gas') → isolate not yet supported inline; test path filtering not available
   // - [bind_json] → Foundry-only (forge bind)
   // - [lint] → Foundry-only (project uses prettier)
   // - out = "out" → Hardhat uses artifacts/ + cache/
   // - libs = ["lib"] → Hardhat resolves lib/ deps via remappings.txt
-  // - forge-config: inline test config — supported since Hardhat 3.3.0 for most settings.
-  //   `isolate` and `evm_version` are NOT yet supported inline. See: https://github.com/NomicFoundation/edr/issues/1349
+  // - forge-config: inline test config — supported since Hardhat 3.3.0 at FUNCTION level only.
+  //   All 10 directives in this project are CONTRACT-level (on contract definitions) — still silently ignored.
+  //   `isolate` and `evm_version` are NOT yet supported inline even at function level. See: https://github.com/NomicFoundation/edr/issues/1349
 });

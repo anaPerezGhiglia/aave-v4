@@ -110,7 +110,7 @@ Found in 10 files:
 - `tests/unit/AaveOracle.t.sol` — `forge-config: default.allow_internal_expect_revert = true`
 - `tests/unit/Hub/Hub.Rounding.t.sol` — `forge-config: default.disable_block_gas_limit = true`
 
-**Note:** These per-test overrides are silently ignored by Hardhat 3 ([#7355](https://github.com/NomicFoundation/hardhat/issues/7355)).
+**Note:** All 10 directives are at **contract level** (on contract definitions, not individual functions). Hardhat 3.3.0 supports inline `forge-config:` at **function level** only — contract-level directives are silently ignored. Additionally, `isolate` and `evm_version` are not yet supported inline even at function level ([edr#1349](https://github.com/NomicFoundation/edr/issues/1349)).
 
 ## Forge-Dependent `package.json` Scripts
 

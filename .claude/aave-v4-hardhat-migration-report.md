@@ -1,7 +1,7 @@
 # Aave V4 — Hardhat 3 Migration Report
 
-**Hardhat version installed:** `^3.1.12`
-**Migration date:** 2026-03-16
+**Hardhat version installed:** `^3.3.0`
+**Migration date:** 2026-04-06
 **Foundry analysis:** [Foundry analysis](aave-v4-foundry-migration-analysis.md)
 
 ---
@@ -15,8 +15,7 @@
 
 ### Notable gaps (non-blocking, medium+ impact)
 
-- 🚩 No equivalent for `forge snapshot` / gas snapshot checks — gas snapshot workflow unavailable
-- 🟡 Inline `forge-config:` per-test overrides silently ignored — 10 test files affected (isolate, allow_internal_expect_revert, disable_block_gas_limit)
+- 🟡 Inline `forge-config:` per-test overrides — all 10 directives in this project are contract-level (not supported); function-level inline config is supported since 3.3.0
 - 🟡 Glob patterns in compilation overrides not supported — `tests/**` restriction cannot be expressed
 
 ---
@@ -42,15 +41,14 @@ The 140 commented-out definitions account for 149 test instances (some functions
 |---|---|---|---|
 | `vm.eip712HashStruct(string,bytes)` | 🚩 **Gap** | **High** — 131 test instances disabled; EIP-712 signature testing untested | No tracking issue found — consider filing one; workaround: implement equivalent EIP-712 hashing in a Solidity helper |
 | `vm.eip712HashType(string)` | 🚩 **Gap** | **High** — 18 test instances disabled; EIP-712 type hash testing untested | No tracking issue found — consider filing one; workaround: hardcode expected type hashes or compute in Solidity |
-| Gas snapshots (`forge snapshot`, `gas_snapshot_check`) | 🚩 **Gap** | **Medium** — `[profile.gas]` workflow unavailable; tests still run but snapshots can't be generated | [#7769](https://github.com/NomicFoundation/hardhat/issues/7769) — no workaround currently |
 | `dynamic_test_linking` | 🚩 **Gap** | **Low** — Foundry-only optimization; tests still work without it | No tracking issue found |
 | `[bind_json]` config | 🚩 **Gap** | **Low** — Foundry-only JSON type binding generation for Solidity | No tracking issue found |
 | `forge bind --alloy` (`rs:bind` script) | 🚩 **Gap** | **Low** — Rust/Alloy binding generation is Foundry-specific; no Hardhat equivalent | No tracking issue found |
-| Inline test config (`forge-config:`) | 🟡 **Partial** | **Medium** — 10 files use per-test `isolate`, `allow_internal_expect_revert`, `disable_block_gas_limit`; silently ignored in Hardhat 3. Global `allowInternalExpectRevert: true` set as workaround; `isolate` and `disable_block_gas_limit` can only be set globally | [#7355](https://github.com/NomicFoundation/hardhat/issues/7355) — set affected settings globally in config as fallback |
+| Inline test config (`forge-config:`) | 🟡 **Partial** | **Medium** — all 10 directives in this project are contract-level (Hardhat only supports function-level since 3.3.0); `isolate` and `evm_version` not yet supported inline even at function level. Global `allowInternalExpectRevert: true` set as workaround; `isolate` and `disable_block_gas_limit` cannot be safely set globally | [edr#1349](https://github.com/NomicFoundation/edr/issues/1349) — contract-level inline config not yet supported |
 | Glob patterns in `overrides` | 🟡 **Partial** | **Medium** — `tests/**` compilation restriction cannot be expressed; each file would need individual listing | [#4686](https://github.com/NomicFoundation/hardhat/issues/4686) — omitted since default compiler settings match the tests restriction |
 | ABI extraction (`rs:abis` script) | 🟡 **Partial** | **Low** — `forge build --extra-output-files abi` extracts ABIs to flat dir; Hardhat produces ABIs in `artifacts/<Contract>.sol/<Contract>.json` but with a different structure | Workaround: extract ABIs from Hardhat artifacts with a shell script |
 | Etherscan verification (per-chain keys) | 🟡 **Partial** | **Low** — Hardhat 3 uses Etherscan API v2 with a single key; Foundry has per-chain keys | Consolidate to a single `ETHERSCAN_API_KEY` — Etherscan API v2 accepts one key across all supported chains |
-| PR/CI fuzz run profiles (`[profile.pr.fuzz]`, `[profile.ci.fuzz]`) | 🟡 **Partial** | **Low** — test-only profile settings; can use env vars or CLI args instead | Hardhat build profiles only cover compiler settings, not test settings |
+| Fuzz/invariant profile overrides (`[profile.pr.fuzz]`, `[profile.ci.fuzz]`) | 🟡 **Partial** | **Low** — test-only profile settings; can use env vars or CLI args instead | Hardhat build profiles only cover compiler settings, not test settings |
 
 ### Full parity
 
@@ -62,6 +60,7 @@ These features work equivalently in Hardhat 3:
 - Coverage build profile (`[profile.coverage]` → `solidity.profiles.coverage`)
 - forge-std cheatcodes (`vm.*`) — general (excluding `eip712HashStruct`, `eip712HashType`)
 - Fuzz testing (`fuzz.runs`, `fuzz.seed`)
+- Gas snapshots (`forge snapshot` → `npx hardhat test solidity --snapshot` / `--snapshot-check`)
 - `fs_permissions` → `fsPermissions`
 - `gas_limit` → `gasLimit`
 - `allow_internal_expect_revert` → `allowInternalExpectRevert` (global)
@@ -89,13 +88,19 @@ These features work equivalently in Hardhat 3:
 
 **What:** Set `test.solidity.allowInternalExpectRevert: true` globally in `hardhat.config.ts`.
 
-**Why:** 3 test files use `/// forge-config: default.allow_internal_expect_revert = true` inline. Hardhat 3 silently ignores inline `forge-config:` directives ([#7355](https://github.com/NomicFoundation/hardhat/issues/7355)). Setting it globally ensures these tests pass. This is safe — the setting only affects `vm.expectRevert` behavior on internal/library calls.
+**Why:** 3 test contracts use contract-level `/// forge-config: default.allow_internal_expect_revert = true` inline. Hardhat 3.3.0 supports inline config at function level only — contract-level directives are silently ignored. Setting it globally ensures these tests pass. This is safe — the setting only affects `vm.expectRevert` behavior on internal/library calls.
 
 ### ESM module type
 
 **What:** Added `"type": "module"` to `package.json`.
 
 **Why:** Required by Hardhat 3. The project had no existing `.js` files with `require()`, so no breakage.
+
+### Gas snapshot group name sanitization
+
+**What:** Replaced dots (`.`) with underscores (`_`) in gas snapshot group names and removed colons, commas, and parentheses from snapshot names across all 6 `tests/gas/*.t.sol` files.
+
+**Why:** Hardhat's gas snapshot cheatcodes (`vm.snapshotGasLastCall`, `vm.startSnapshotGas`) only allow alphanumeric characters, hyphens, underscores, and spaces in group and snapshot names. This is intentional to prevent path traversal. Forge allows dots and other characters. Examples: `'Hub.Operations'` → `'Hub_Operations'`, `'restore: partial'` → `'restore - partial'`, `'supplies: 0, borrows: 0'` → `'supplies - 0 borrows - 0'`.
 
 ## 3b. UnsupportedCheatcode errors
 
