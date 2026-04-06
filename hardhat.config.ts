@@ -88,9 +88,8 @@ export default defineConfig({
       // gas_limit = 1099511627776 (must be bigint)
       gasLimit: 1099511627776n,
 
-      // allow_internal_expect_revert — needed for tests using forge-config inline override
-      // (inline config is silently ignored by Hardhat: https://github.com/NomicFoundation/hardhat/issues/7355)
-      // Setting globally since per-test overrides aren't supported
+      // Inline forge-config: default.allow_internal_expect_revert = true at contract-level
+      // does not work in Hardhat 3.3.0 (only at test-level). Setting globally as workaround.
       allowInternalExpectRevert: true,
     },
   },
@@ -153,7 +152,6 @@ export default defineConfig({
   // - [lint] → Foundry-only (project uses prettier)
   // - out = "out" → Hardhat uses artifacts/ + cache/
   // - libs = ["lib"] → Hardhat resolves lib/ deps via remappings.txt
-  // - forge-config: inline test config (isolate, allow_internal_expect_revert, disable_block_gas_limit)
-  //   → Silently ignored. See: https://github.com/NomicFoundation/hardhat/issues/7355
-  //   Note: disable_block_gas_limit maps to blockGasLimit: false in Hardhat, but only globally — not per-test.
+  // - forge-config: inline test config — supported since Hardhat 3.3.0 for most settings.
+  //   `isolate` and `evm_version` are NOT yet supported inline. See: https://github.com/NomicFoundation/edr/issues/1349
 });
