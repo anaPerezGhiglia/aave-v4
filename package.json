@@ -19,7 +19,7 @@
   "type": "module",
   "devDependencies": {
     "@nomicfoundation/hardhat-verify": "^3.0.11",
-    "hardhat": "^3.3.0",
+    "hardhat": "^3.4.4",
     "husky": "9.1.7",
     "lint-staged": "16.2.3",
     "prettier": "3.7.4",

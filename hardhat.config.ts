@@ -88,9 +88,11 @@ export default defineConfig({
       // gas_limit = 1099511627776 (must be bigint)
       gasLimit: 1099511627776n,
 
-      // 3 contracts use contract-level `forge-config: default.allow_internal_expect_revert = true`.
-      // Hardhat 3.3.0 supports inline config at function level only — contract-level directives are
-      // silently ignored. Setting globally as workaround (safe — behaviorally neutral for other tests).
+      // allow_internal_expect_revert — needed for tests using forge-config inline override.
+      // Hardhat 3.3.0+ supports inline config at FUNCTION level (#7355 closed), but the project's
+      // directives are at CONTRACT level (placed on the contract definition). Contract-level
+      // inline config is still silently ignored by Hardhat — only function-level is honored.
+      // Setting globally is the workaround. Safe: only affects vm.expectRevert on internal calls.
       allowInternalExpectRevert: true,
     },
   },
@@ -147,15 +149,18 @@ export default defineConfig({
   // Foundry-only settings (no Hardhat equivalent)
   // ============================================================================
   // - dynamic_test_linking = true → Foundry-only
-  // - gas_snapshot_check = false → Use `npx hardhat test solidity --snapshot` / `--snapshot-check`
-  //   See: https://hardhat.org/docs/guides/testing/gas-snapshots
-  //   Note: snapshot group names must use alphanumeric chars, hyphens, underscores, spaces only (no dots)
-  // - [profile.gas] (isolate, test='tests/gas') → isolate not yet supported inline; test path filtering not available
+  // - gas_snapshot_check = false → Now supported via `npx hardhat test solidity --snapshot` /
+  //   `--snapshot-check` (#7769 closed). foundry.toml has it disabled at default profile, so no
+  //   action needed; [profile.gas] enables it but Hardhat profiles cover compiler settings only.
+  // - [profile.gas] (isolate, gas_snapshot_check, test='tests/gas') → test-only profile;
+  //   gas snapshot generation is supported via CLI flags. `isolate` global cannot be enabled
+  //   (would slow non-gas tests dramatically); only the gas-test contracts use isolate inline.
   // - [bind_json] → Foundry-only (forge bind)
   // - [lint] → Foundry-only (project uses prettier)
   // - out = "out" → Hardhat uses artifacts/ + cache/
   // - libs = ["lib"] → Hardhat resolves lib/ deps via remappings.txt
-  // - forge-config: inline test config — supported since Hardhat 3.3.0 at FUNCTION level only.
-  //   All 10 directives in this project are CONTRACT-level (on contract definitions) — still silently ignored.
-  //   `isolate` and `evm_version` are NOT yet supported inline even at function level. See: https://github.com/NomicFoundation/edr/issues/1349
+  // - forge-config: inline test config (isolate, allow_internal_expect_revert, disable_block_gas_limit)
+  //   → Hardhat 3.3.0+ supports function-level inline config (#7355 closed), but this project's
+  //   directives are contract-level — still ignored. `isolate` and `evm_version` are not yet
+  //   supported inline even at function level (see https://github.com/NomicFoundation/edr/issues/1349).
 });
