@@ -8,17 +8,17 @@ type: bug
 
 ## Summary
 
-Hardhat 3.4.4 (with EDR `0.12.0-next.31`) enforces a strict character allowlist on gas snapshot names passed to `vm.snapshotGasLastCall(string, string)`. The allowlist is `[a-zA-Z0-9_\- ,]` plus non-consecutive dots. **Foundry does not enforce any name validation** in the equivalent cheatcode (see [`crates/cheatcodes/src/evm.rs::inner_last_gas_snapshot`](https://github.com/foundry-rs/foundry/blob/master/crates/cheatcodes/src/evm.rs)). This makes EDR strictly more restrictive than Foundry and causes valid Foundry-idiomatic test code to fail under Hardhat.
+Hardhat 3 (via EDR) enforces a strict character allowlist on gas snapshot names passed to `vm.snapshotGasLastCall(string, string)`, `vm.startSnapshotGas(string, string)`, and related cheatcodes. **Foundry does not enforce any name validation** in the equivalent cheatcode (see [`crates/cheatcodes/src/evm.rs::inner_last_gas_snapshot`](https://github.com/foundry-rs/foundry/blob/master/crates/cheatcodes/src/evm.rs)). This makes EDR strictly more restrictive than Foundry and causes valid Foundry-idiomatic test code to fail under Hardhat.
 
-The Aave V4 project's gas test suite uses descriptive snapshot names containing colons (e.g. `'liquidationCall (reportDeficit): full'`), which Foundry accepts and which previously passed under Hardhat 3.1.12. After upgrading to Hardhat 3.4.4, **38 gas tests fail** with the validation error.
+The Aave V4 project's gas test suite uses descriptive snapshot names containing colons and parentheses (e.g. `'liquidationCall (reportDeficit): full'`, `'getUserAccountData: supplies: 0, borrows: 0'`), which Foundry accepts and which trip EDR's validator. Under Hardhat 3.4.4 (EDR `next.31`), **38 gas tests fail** with the validation error.
 
 ## Affected layer
 
-EDR (`@nomicfoundation/edr` ≥ `0.12.0-next.31`). The validation appears to live in EDR's gas snapshot cheatcode handler. No Hardhat-side change is involved.
+EDR (`@nomicfoundation/edr`). Per the EDR changelog, the validator was introduced in **[`0.12.0-next.29`](https://github.com/NomicFoundation/edr/releases) (Mar 24)** — *"Added validation checks for names provided in gas snapshot cheatcodes"*. Releases before `next.29` had no validation (Foundry-equivalent behaviour). The allowlist was later relaxed in `next.31` (Apr 20) to permit commas and non-consecutive dots, but `:`, `(`, `)`, and `/` are still rejected. No Hardhat-side change is involved — every Hardhat 3 release that pins EDR ≥ `next.29` (which is every release since at least Hardhat 3.3.0) inherits this behaviour.
 
 ## Steps to reproduce
 
-1. Install Hardhat `^3.4.4` (which pins EDR `0.12.0-next.31`).
+1. Install any Hardhat 3 release that pins EDR ≥ `0.12.0-next.29` (verified on Hardhat 3.3.0 / EDR `next.29` and Hardhat 3.4.4 / EDR `next.31`).
 2. Add a Solidity test that calls `vm.snapshotGasLastCall(string,string)` with a name containing `:`:
 
    ```solidity
@@ -48,7 +48,7 @@ EDR (`@nomicfoundation/edr` ≥ `0.12.0-next.31`). The validation appears to liv
 
 ## Expected vs actual
 
-|             | Foundry (`forge test`)           | Hardhat 3.4.4 / EDR `next.31`                                                                                                                                                                 |
+|             | Foundry (`forge test`)           | Hardhat 3 / EDR ≥ `next.29`                                                                                                                                                                   |
 | ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Test result | **passes** — name accepted as-is | **fails** with `vm.snapshotGasLastCall: invalid snapshot name: "name: with colon". Only alphanumeric characters, hyphens, underscores, spaces, commas, and non-consecutive dots are allowed.` |
 
