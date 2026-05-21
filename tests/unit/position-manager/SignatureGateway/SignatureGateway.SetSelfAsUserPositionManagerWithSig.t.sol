@@ -65,35 +65,34 @@ contract SignatureGatewaySetSelfAsUserPositionManagerTest is SignatureGatewayBas
     assertFalse(spoke1.isPositionManager(alice, address(gateway)));
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_setSelfAsUserPositionManagerWithSig() public {
-  //   uint192 nonceKey = _randomNonceKey();
-  //   vm.prank(alice);
-  //   spoke1.useNonce(nonceKey);
-  //   ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
-  //   updates[0] = ISpoke.PositionManagerUpdate(address(gateway), true);
-  //   ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
-  //     onBehalfOf: alice,
-  //     updates: updates,
-  //     nonce: spoke1.nonces(alice, nonceKey), // note: this typed sig is forwarded to spoke
-  //     deadline: _warpBeforeRandomDeadline()
-  //   });
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(spoke1, p));
-  //
-  //   vm.prank(SPOKE_ADMIN);
-  //   spoke1.updatePositionManager(address(gateway), true);
-  //   vm.prank(alice);
-  //   spoke1.setUserPositionManager(address(gateway), false);
-  //
-  //   gateway.setSelfAsUserPositionManagerWithSig({
-  //     spoke: address(spoke1),
-  //     onBehalfOf: p.onBehalfOf,
-  //     approve: p.updates[0].approve,
-  //     nonce: p.nonce,
-  //     deadline: p.deadline,
-  //     signature: signature
-  //   });
-  //
-  //   assertTrue(spoke1.isPositionManager(alice, address(gateway)));
-  // }
+  function test_setSelfAsUserPositionManagerWithSig() public {
+    uint192 nonceKey = _randomNonceKey();
+    vm.prank(alice);
+    spoke1.useNonce(nonceKey);
+    ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
+    updates[0] = ISpoke.PositionManagerUpdate(address(gateway), true);
+    ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
+      onBehalfOf: alice,
+      updates: updates,
+      nonce: spoke1.nonces(alice, nonceKey), // note: this typed sig is forwarded to spoke
+      deadline: _warpBeforeRandomDeadline()
+    });
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(spoke1, p));
+
+    vm.prank(SPOKE_ADMIN);
+    spoke1.updatePositionManager(address(gateway), true);
+    vm.prank(alice);
+    spoke1.setUserPositionManager(address(gateway), false);
+
+    gateway.setSelfAsUserPositionManagerWithSig({
+      spoke: address(spoke1),
+      onBehalfOf: p.onBehalfOf,
+      approve: p.updates[0].approve,
+      nonce: p.nonce,
+      deadline: p.deadline,
+      signature: signature
+    });
+
+    assertTrue(spoke1.isPositionManager(alice, address(gateway)));
+  }
 }

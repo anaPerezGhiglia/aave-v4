@@ -55,86 +55,79 @@ contract SignatureGatewayConstantsTest is SignatureGatewayBaseTest {
     assertEq(instance.DOMAIN_SEPARATOR(), expectedDomainSeparator);
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_supply_typeHash() public view {
-  //   assertEq(gateway.SUPPLY_TYPEHASH(), vm.eip712HashType('Supply'));
-  //   assertEq(
-  //     gateway.SUPPLY_TYPEHASH(),
-  //     keccak256(
-  //       'Supply(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_supply_typeHash() public view {
+    assertEq(gateway.SUPPLY_TYPEHASH(), vm.eip712HashType('Supply'));
+    assertEq(
+      gateway.SUPPLY_TYPEHASH(),
+      keccak256(
+        'Supply(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_withdraw_typeHash() public view {
-  //   assertEq(gateway.WITHDRAW_TYPEHASH(), vm.eip712HashType('Withdraw'));
-  //   assertEq(
-  //     gateway.WITHDRAW_TYPEHASH(),
-  //     keccak256(
-  //       'Withdraw(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_withdraw_typeHash() public view {
+    assertEq(gateway.WITHDRAW_TYPEHASH(), vm.eip712HashType('Withdraw'));
+    assertEq(
+      gateway.WITHDRAW_TYPEHASH(),
+      keccak256(
+        'Withdraw(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_borrow_typeHash() public view {
-  //   assertEq(gateway.BORROW_TYPEHASH(), vm.eip712HashType('Borrow'));
-  //   assertEq(
-  //     gateway.BORROW_TYPEHASH(),
-  //     keccak256(
-  //       'Borrow(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_borrow_typeHash() public view {
+    assertEq(gateway.BORROW_TYPEHASH(), vm.eip712HashType('Borrow'));
+    assertEq(
+      gateway.BORROW_TYPEHASH(),
+      keccak256(
+        'Borrow(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_repay_typeHash() public view {
-  //   assertEq(gateway.REPAY_TYPEHASH(), vm.eip712HashType('Repay'));
-  //   assertEq(
-  //     gateway.REPAY_TYPEHASH(),
-  //     keccak256(
-  //       'Repay(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_repay_typeHash() public view {
+    assertEq(gateway.REPAY_TYPEHASH(), vm.eip712HashType('Repay'));
+    assertEq(
+      gateway.REPAY_TYPEHASH(),
+      keccak256(
+        'Repay(address spoke,uint256 reserveId,uint256 amount,address onBehalfOf,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_setUsingAsCollateral_typeHash() public view {
-  //   assertEq(gateway.SET_USING_AS_COLLATERAL_TYPEHASH(), vm.eip712HashType('SetUsingAsCollateral'));
-  //   assertEq(
-  //     gateway.SET_USING_AS_COLLATERAL_TYPEHASH(),
-  //     keccak256(
-  //       'SetUsingAsCollateral(address spoke,uint256 reserveId,bool useAsCollateral,address onBehalfOf,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_setUsingAsCollateral_typeHash() public view {
+    assertEq(gateway.SET_USING_AS_COLLATERAL_TYPEHASH(), vm.eip712HashType('SetUsingAsCollateral'));
+    assertEq(
+      gateway.SET_USING_AS_COLLATERAL_TYPEHASH(),
+      keccak256(
+        'SetUsingAsCollateral(address spoke,uint256 reserveId,bool useAsCollateral,address onBehalfOf,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_updateUserRiskPremium_typeHash() public view {
-  //   assertEq(
-  //     gateway.UPDATE_USER_RISK_PREMIUM_TYPEHASH(),
-  //     vm.eip712HashType('UpdateUserRiskPremium')
-  //   );
-  //   assertEq(
-  //     gateway.UPDATE_USER_RISK_PREMIUM_TYPEHASH(),
-  //     keccak256(
-  //       'UpdateUserRiskPremium(address spoke,address onBehalfOf,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_updateUserRiskPremium_typeHash() public view {
+    assertEq(
+      gateway.UPDATE_USER_RISK_PREMIUM_TYPEHASH(),
+      vm.eip712HashType('UpdateUserRiskPremium')
+    );
+    assertEq(
+      gateway.UPDATE_USER_RISK_PREMIUM_TYPEHASH(),
+      keccak256(
+        'UpdateUserRiskPremium(address spoke,address onBehalfOf,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_updateUserDynamicConfig_typeHash() public view {
-  //   assertEq(
-  //     gateway.UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH(),
-  //     vm.eip712HashType('UpdateUserDynamicConfig')
-  //   );
-  //   assertEq(
-  //     gateway.UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH(),
-  //     keccak256(
-  //       'UpdateUserDynamicConfig(address spoke,address onBehalfOf,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_updateUserDynamicConfig_typeHash() public view {
+    assertEq(
+      gateway.UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH(),
+      vm.eip712HashType('UpdateUserDynamicConfig')
+    );
+    assertEq(
+      gateway.UPDATE_USER_DYNAMIC_CONFIG_TYPEHASH(),
+      keccak256(
+        'UpdateUserDynamicConfig(address spoke,address onBehalfOf,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 }

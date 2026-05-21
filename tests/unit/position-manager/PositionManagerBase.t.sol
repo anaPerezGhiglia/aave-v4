@@ -41,40 +41,39 @@ contract PositionManagerBaseTest is SpokeBase {
     positionManager.getReserveUnderlying(address(spoke1), reserveId);
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_setSelfAsUserPositionManagerWithSig() public {
-  //   ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
-  //   updates[0] = ISpoke.PositionManagerUpdate(address(positionManager), true);
-  //
-  //   ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
-  //     onBehalfOf: alice,
-  //     updates: updates,
-  //     nonce: spoke1.nonces(address(alice), _randomNonceKey()), // note: this typed sig is forwarded to spoke1
-  //     deadline: _warpBeforeRandomDeadline()
-  //   });
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(spoke1, p));
-  //
-  //   vm.prank(ADMIN);
-  //   positionManager.registerSpoke(address(spoke1), true);
-  //
-  //   assertFalse(spoke1.isPositionManager(alice, address(positionManager)));
-  //
-  //   vm.expectEmit(address(spoke1));
-  //   emit ISpoke.SetUserPositionManager(alice, address(positionManager), p.updates[0].approve);
-  //
-  //   vm.prank(vm.randomAddress());
-  //   positionManager.setSelfAsUserPositionManagerWithSig(
-  //     address(spoke1),
-  //     p.onBehalfOf,
-  //     p.updates[0].approve,
-  //     p.nonce,
-  //     p.deadline,
-  //     signature
-  //   );
-  //
-  //   _assertNonceIncrement(ISignatureGateway(address(spoke1)), alice, p.nonce); // note: nonce consumed on spoke1
-  //   assertTrue(spoke1.isPositionManager(alice, address(positionManager)));
-  // }
+  function test_setSelfAsUserPositionManagerWithSig() public {
+    ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
+    updates[0] = ISpoke.PositionManagerUpdate(address(positionManager), true);
+
+    ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
+      onBehalfOf: alice,
+      updates: updates,
+      nonce: spoke1.nonces(address(alice), _randomNonceKey()), // note: this typed sig is forwarded to spoke1
+      deadline: _warpBeforeRandomDeadline()
+    });
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(spoke1, p));
+
+    vm.prank(ADMIN);
+    positionManager.registerSpoke(address(spoke1), true);
+
+    assertFalse(spoke1.isPositionManager(alice, address(positionManager)));
+
+    vm.expectEmit(address(spoke1));
+    emit ISpoke.SetUserPositionManager(alice, address(positionManager), p.updates[0].approve);
+
+    vm.prank(vm.randomAddress());
+    positionManager.setSelfAsUserPositionManagerWithSig(
+      address(spoke1),
+      p.onBehalfOf,
+      p.updates[0].approve,
+      p.nonce,
+      p.deadline,
+      signature
+    );
+
+    _assertNonceIncrement(ISignatureGateway(address(spoke1)), alice, p.nonce); // note: nonce consumed on spoke1
+    assertTrue(spoke1.isPositionManager(alice, address(positionManager)));
+  }
 
   function test_permitReserveUnderlying_revertsWith_ReserveNotListed() public {
     vm.prank(ADMIN);
@@ -147,43 +146,42 @@ contract PositionManagerBaseTest is SpokeBase {
     );
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_permitReserveUnderlying() public {
-  //   (address user, uint256 userPk) = makeAddrAndKey('user');
-  //   uint256 reserveId = _daiReserveId(spoke1);
-  //   TestnetERC20 token = TestnetERC20(address(_underlying(spoke1, reserveId)));
-  //
-  //   vm.prank(ADMIN);
-  //   positionManager.registerSpoke(address(spoke1), true);
-  //
-  //   assertEq(token.allowance(user, address(positionManager)), 0);
-  //
-  //   EIP712Types.Permit memory params = EIP712Types.Permit({
-  //     owner: user,
-  //     spender: address(positionManager),
-  //     value: 100e18,
-  //     deadline: _warpBeforeRandomDeadline(),
-  //     nonce: token.nonces(user)
-  //   });
-  //
-  //   (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, _getTypedDataHash(token, params));
-  //
-  //   vm.expectEmit(address(token));
-  //   emit IERC20.Approval(user, address(positionManager), params.value);
-  //   vm.prank(vm.randomAddress());
-  //   positionManager.permitReserveUnderlying(
-  //     address(spoke1),
-  //     reserveId,
-  //     user,
-  //     params.value,
-  //     params.deadline,
-  //     v,
-  //     r,
-  //     s
-  //   );
-  //
-  //   assertEq(token.allowance(user, address(positionManager)), params.value);
-  // }
+  function test_permitReserveUnderlying() public {
+    (address user, uint256 userPk) = makeAddrAndKey('user');
+    uint256 reserveId = _daiReserveId(spoke1);
+    TestnetERC20 token = TestnetERC20(address(_underlying(spoke1, reserveId)));
+
+    vm.prank(ADMIN);
+    positionManager.registerSpoke(address(spoke1), true);
+
+    assertEq(token.allowance(user, address(positionManager)), 0);
+
+    EIP712Types.Permit memory params = EIP712Types.Permit({
+      owner: user,
+      spender: address(positionManager),
+      value: 100e18,
+      deadline: _warpBeforeRandomDeadline(),
+      nonce: token.nonces(user)
+    });
+
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, _getTypedDataHash(token, params));
+
+    vm.expectEmit(address(token));
+    emit IERC20.Approval(user, address(positionManager), params.value);
+    vm.prank(vm.randomAddress());
+    positionManager.permitReserveUnderlying(
+      address(spoke1),
+      reserveId,
+      user,
+      params.value,
+      params.deadline,
+      v,
+      r,
+      s
+    );
+
+    assertEq(token.allowance(user, address(positionManager)), params.value);
+  }
 
   function test_registerSpoke_fuzz(address newSpoke) public {
     vm.assume(newSpoke != address(0));

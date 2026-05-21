@@ -114,157 +114,149 @@ contract SignatureGateway_Gas_Tests is SignatureGatewayBaseTest {
     gateway.useNonce(nonceKey);
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_supplyWithSig() public {
-  //   ISignatureGateway.Supply memory p = ISignatureGateway.Supply({
-  //     spoke: address(spoke1),
-  //     reserveId: _wethReserveId(spoke1),
-  //     amount: 100e18,
-  //     onBehalfOf: alice,
-  //     nonce: gateway.nonces(alice, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
-  //   Utils.approve(spoke1, p.reserveId, alice, address(gateway), p.amount);
-  //   Utils.supply(spoke1, p.reserveId, alice, p.amount, alice);
-  //
-  //   gateway.supplyWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'supplyWithSig');
-  // }
+  function test_supplyWithSig() public {
+    ISignatureGateway.Supply memory p = ISignatureGateway.Supply({
+      spoke: address(spoke1),
+      reserveId: _wethReserveId(spoke1),
+      amount: 100e18,
+      onBehalfOf: alice,
+      nonce: gateway.nonces(alice, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
+    Utils.approve(spoke1, p.reserveId, alice, address(gateway), p.amount);
+    Utils.supply(spoke1, p.reserveId, alice, p.amount, alice);
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_withdrawWithSig() public {
-  //   ISignatureGateway.Withdraw memory p = ISignatureGateway.Withdraw({
-  //     spoke: address(spoke1),
-  //     reserveId: _wethReserveId(spoke1),
-  //     amount: 100e18,
-  //     onBehalfOf: alice,
-  //     nonce: gateway.nonces(alice, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
-  //
-  //   Utils.supply(spoke1, p.reserveId, alice, 200e18, alice);
-  //   Utils.withdraw(spoke1, p.reserveId, alice, 100e18, alice);
-  //
-  //   gateway.withdrawWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'withdrawWithSig');
-  // }
+    gateway.supplyWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'supplyWithSig');
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_borrowWithSig() public {
-  //   ISignatureGateway.Borrow memory p = ISignatureGateway.Borrow({
-  //     spoke: address(spoke1),
-  //     reserveId: _wethReserveId(spoke1),
-  //     amount: 100e18,
-  //     onBehalfOf: alice,
-  //     nonce: gateway.nonces(alice, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   Utils.supplyCollateral(spoke1, p.reserveId, alice, p.amount * 4, alice);
-  //   Utils.borrow(spoke1, p.reserveId, alice, p.amount, alice);
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
-  //
-  //   gateway.borrowWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'borrowWithSig');
-  // }
+  function test_withdrawWithSig() public {
+    ISignatureGateway.Withdraw memory p = ISignatureGateway.Withdraw({
+      spoke: address(spoke1),
+      reserveId: _wethReserveId(spoke1),
+      amount: 100e18,
+      onBehalfOf: alice,
+      nonce: gateway.nonces(alice, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_repayWithSig() public {
-  //   ISignatureGateway.Repay memory p = ISignatureGateway.Repay({
-  //     spoke: address(spoke1),
-  //     reserveId: _wethReserveId(spoke1),
-  //     amount: 100e18,
-  //     onBehalfOf: alice,
-  //     nonce: gateway.nonces(alice, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   Utils.supplyCollateral(spoke1, p.reserveId, alice, p.amount * 10, alice);
-  //   Utils.borrow(spoke1, p.reserveId, alice, p.amount * 3, alice);
-  //   Utils.approve(spoke1, p.reserveId, alice, address(gateway), p.amount * 2);
-  //   Utils.repay(spoke1, p.reserveId, alice, p.amount, alice);
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
-  //
-  //   gateway.repayWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'repayWithSig');
-  // }
+    Utils.supply(spoke1, p.reserveId, alice, 200e18, alice);
+    Utils.withdraw(spoke1, p.reserveId, alice, 100e18, alice);
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_setUsingAsCollateralWithSig() public {
-  //   ISignatureGateway.SetUsingAsCollateral memory p = ISignatureGateway.SetUsingAsCollateral({
-  //     spoke: address(spoke1),
-  //     reserveId: _wethReserveId(spoke1),
-  //     useAsCollateral: true,
-  //     onBehalfOf: alice,
-  //     nonce: gateway.nonces(alice, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   Utils.supply(spoke1, p.reserveId, alice, 1e18, alice);
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
-  //
-  //   gateway.setUsingAsCollateralWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'setUsingAsCollateralWithSig');
-  // }
+    gateway.withdrawWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'withdrawWithSig');
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_updateUserRiskPremiumWithSig() public {
-  //   ISignatureGateway.UpdateUserRiskPremium memory p = ISignatureGateway.UpdateUserRiskPremium({
-  //     spoke: address(spoke1),
-  //     onBehalfOf: alice,
-  //     nonce: gateway.nonces(alice, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
-  //
-  //   vm.prank(alice);
-  //   spoke1.updateUserRiskPremium(alice);
-  //
-  //   gateway.updateUserRiskPremiumWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'updateUserRiskPremiumWithSig');
-  // }
+  function test_borrowWithSig() public {
+    ISignatureGateway.Borrow memory p = ISignatureGateway.Borrow({
+      spoke: address(spoke1),
+      reserveId: _wethReserveId(spoke1),
+      amount: 100e18,
+      onBehalfOf: alice,
+      nonce: gateway.nonces(alice, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    Utils.supplyCollateral(spoke1, p.reserveId, alice, p.amount * 4, alice);
+    Utils.borrow(spoke1, p.reserveId, alice, p.amount, alice);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_updateUserDynamicConfigWithSig() public {
-  //   ISignatureGateway.UpdateUserDynamicConfig memory p = ISignatureGateway.UpdateUserDynamicConfig({
-  //     spoke: address(spoke1),
-  //     onBehalfOf: alice,
-  //     nonce: gateway.nonces(alice, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
-  //
-  //   vm.prank(alice);
-  //   spoke1.updateUserDynamicConfig(alice);
-  //
-  //   gateway.updateUserDynamicConfigWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'updateUserDynamicConfigWithSig');
-  // }
+    gateway.borrowWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'borrowWithSig');
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_setSelfAsUserPositionManagerWithSig() public {
-  //   vm.prank(alice);
-  //   spoke1.useNonce(nonceKey);
-  //   ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
-  //   updates[0] = ISpoke.PositionManagerUpdate(address(gateway), true);
-  //   ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
-  //     onBehalfOf: alice,
-  //     updates: updates,
-  //     nonce: spoke1.nonces(alice, nonceKey), // note: this typed sig is forwarded to spoke
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   bytes memory signature = _sign(alicePk, _getTypedDataHash(spoke1, p));
-  //
-  //   vm.prank(alice);
-  //   spoke1.setUserPositionManager(address(gateway), false);
-  //
-  //   gateway.setSelfAsUserPositionManagerWithSig({
-  //     spoke: address(spoke1),
-  //     onBehalfOf: p.onBehalfOf,
-  //     approve: p.updates[0].approve,
-  //     nonce: p.nonce,
-  //     deadline: p.deadline,
-  //     signature: signature
-  //   });
-  //   vm.snapshotGasLastCall(NAMESPACE, 'setSelfAsUserPositionManagerWithSig');
-  // }
+  function test_repayWithSig() public {
+    ISignatureGateway.Repay memory p = ISignatureGateway.Repay({
+      spoke: address(spoke1),
+      reserveId: _wethReserveId(spoke1),
+      amount: 100e18,
+      onBehalfOf: alice,
+      nonce: gateway.nonces(alice, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    Utils.supplyCollateral(spoke1, p.reserveId, alice, p.amount * 10, alice);
+    Utils.borrow(spoke1, p.reserveId, alice, p.amount * 3, alice);
+    Utils.approve(spoke1, p.reserveId, alice, address(gateway), p.amount * 2);
+    Utils.repay(spoke1, p.reserveId, alice, p.amount, alice);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
+
+    gateway.repayWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'repayWithSig');
+  }
+
+  function test_setUsingAsCollateralWithSig() public {
+    ISignatureGateway.SetUsingAsCollateral memory p = ISignatureGateway.SetUsingAsCollateral({
+      spoke: address(spoke1),
+      reserveId: _wethReserveId(spoke1),
+      useAsCollateral: true,
+      onBehalfOf: alice,
+      nonce: gateway.nonces(alice, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    Utils.supply(spoke1, p.reserveId, alice, 1e18, alice);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
+
+    gateway.setUsingAsCollateralWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'setUsingAsCollateralWithSig');
+  }
+
+  function test_updateUserRiskPremiumWithSig() public {
+    ISignatureGateway.UpdateUserRiskPremium memory p = ISignatureGateway.UpdateUserRiskPremium({
+      spoke: address(spoke1),
+      onBehalfOf: alice,
+      nonce: gateway.nonces(alice, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
+
+    vm.prank(alice);
+    spoke1.updateUserRiskPremium(alice);
+
+    gateway.updateUserRiskPremiumWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'updateUserRiskPremiumWithSig');
+  }
+
+  function test_updateUserDynamicConfigWithSig() public {
+    ISignatureGateway.UpdateUserDynamicConfig memory p = ISignatureGateway.UpdateUserDynamicConfig({
+      spoke: address(spoke1),
+      onBehalfOf: alice,
+      nonce: gateway.nonces(alice, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(gateway, p));
+
+    vm.prank(alice);
+    spoke1.updateUserDynamicConfig(alice);
+
+    gateway.updateUserDynamicConfigWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'updateUserDynamicConfigWithSig');
+  }
+
+  function test_setSelfAsUserPositionManagerWithSig() public {
+    vm.prank(alice);
+    spoke1.useNonce(nonceKey);
+    ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
+    updates[0] = ISpoke.PositionManagerUpdate(address(gateway), true);
+    ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
+      onBehalfOf: alice,
+      updates: updates,
+      nonce: spoke1.nonces(alice, nonceKey), // note: this typed sig is forwarded to spoke
+      deadline: vm.getBlockTimestamp()
+    });
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(spoke1, p));
+
+    vm.prank(alice);
+    spoke1.setUserPositionManager(address(gateway), false);
+
+    gateway.setSelfAsUserPositionManagerWithSig({
+      spoke: address(spoke1),
+      onBehalfOf: p.onBehalfOf,
+      approve: p.updates[0].approve,
+      nonce: p.nonce,
+      deadline: p.deadline,
+      signature: signature
+    });
+    vm.snapshotGasLastCall(NAMESPACE, 'setSelfAsUserPositionManagerWithSig');
+  }
 }

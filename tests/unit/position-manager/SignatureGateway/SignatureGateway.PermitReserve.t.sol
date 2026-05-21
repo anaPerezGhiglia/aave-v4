@@ -75,38 +75,37 @@ contract SignatureGatewayPermitReserveTest is SignatureGatewayBaseTest {
     );
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_permitReserve() public {
-  //   (address user, uint256 userPk) = makeAddrAndKey('user');
-  //   uint256 reserveId = _daiReserveId(spoke1);
-  //   TestnetERC20 token = TestnetERC20(address(_underlying(spoke1, reserveId)));
-  //
-  //   assertEq(token.allowance(user, address(gateway)), 0);
-  //
-  //   EIP712Types.Permit memory params = EIP712Types.Permit({
-  //     owner: user,
-  //     spender: address(gateway),
-  //     value: 100e18,
-  //     deadline: _warpBeforeRandomDeadline(),
-  //     nonce: token.nonces(user)
-  //   });
-  //
-  //   (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, _getTypedDataHash(token, params));
-  //
-  //   vm.expectEmit(address(token));
-  //   emit IERC20.Approval(user, address(gateway), params.value);
-  //   vm.prank(vm.randomAddress());
-  //   gateway.permitReserveUnderlying(
-  //     address(spoke1),
-  //     reserveId,
-  //     user,
-  //     params.value,
-  //     params.deadline,
-  //     v,
-  //     r,
-  //     s
-  //   );
-  //
-  //   assertEq(token.allowance(user, address(gateway)), params.value);
-  // }
+  function test_permitReserve() public {
+    (address user, uint256 userPk) = makeAddrAndKey('user');
+    uint256 reserveId = _daiReserveId(spoke1);
+    TestnetERC20 token = TestnetERC20(address(_underlying(spoke1, reserveId)));
+
+    assertEq(token.allowance(user, address(gateway)), 0);
+
+    EIP712Types.Permit memory params = EIP712Types.Permit({
+      owner: user,
+      spender: address(gateway),
+      value: 100e18,
+      deadline: _warpBeforeRandomDeadline(),
+      nonce: token.nonces(user)
+    });
+
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, _getTypedDataHash(token, params));
+
+    vm.expectEmit(address(token));
+    emit IERC20.Approval(user, address(gateway), params.value);
+    vm.prank(vm.randomAddress());
+    gateway.permitReserveUnderlying(
+      address(spoke1),
+      reserveId,
+      user,
+      params.value,
+      params.deadline,
+      v,
+      r,
+      s
+    );
+
+    assertEq(token.allowance(user, address(gateway)), params.value);
+  }
 }

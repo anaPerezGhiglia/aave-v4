@@ -54,58 +54,53 @@ contract TokenizationSpokeConstantsTest is TokenizationSpokeBaseTest {
     assertEq(instance.DOMAIN_SEPARATOR(), expectedDomainSeparator);
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_deposit_typeHash() public view {
-  //   assertEq(daiVault.DEPOSIT_TYPEHASH(), vm.eip712HashType('TokenizedDeposit'));
-  //   assertEq(
-  //     daiVault.DEPOSIT_TYPEHASH(),
-  //     keccak256(
-  //       'TokenizedDeposit(address depositor,uint256 assets,address receiver,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_deposit_typeHash() public view {
+    assertEq(daiVault.DEPOSIT_TYPEHASH(), vm.eip712HashType('TokenizedDeposit'));
+    assertEq(
+      daiVault.DEPOSIT_TYPEHASH(),
+      keccak256(
+        'TokenizedDeposit(address depositor,uint256 assets,address receiver,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_mint_typeHash() public view {
-  //   assertEq(daiVault.MINT_TYPEHASH(), vm.eip712HashType('TokenizedMint'));
-  //   assertEq(
-  //     daiVault.MINT_TYPEHASH(),
-  //     keccak256(
-  //       'TokenizedMint(address depositor,uint256 shares,address receiver,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_mint_typeHash() public view {
+    assertEq(daiVault.MINT_TYPEHASH(), vm.eip712HashType('TokenizedMint'));
+    assertEq(
+      daiVault.MINT_TYPEHASH(),
+      keccak256(
+        'TokenizedMint(address depositor,uint256 shares,address receiver,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_withdraw_typeHash() public view {
-  //   assertEq(daiVault.WITHDRAW_TYPEHASH(), vm.eip712HashType('TokenizedWithdraw'));
-  //   assertEq(
-  //     daiVault.WITHDRAW_TYPEHASH(),
-  //     keccak256(
-  //       'TokenizedWithdraw(address owner,uint256 assets,address receiver,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_withdraw_typeHash() public view {
+    assertEq(daiVault.WITHDRAW_TYPEHASH(), vm.eip712HashType('TokenizedWithdraw'));
+    assertEq(
+      daiVault.WITHDRAW_TYPEHASH(),
+      keccak256(
+        'TokenizedWithdraw(address owner,uint256 assets,address receiver,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_redeem_typeHash() public view {
-  //   assertEq(daiVault.REDEEM_TYPEHASH(), vm.eip712HashType('TokenizedRedeem'));
-  //   assertEq(
-  //     daiVault.REDEEM_TYPEHASH(),
-  //     keccak256(
-  //       'TokenizedRedeem(address owner,uint256 shares,address receiver,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_redeem_typeHash() public view {
+    assertEq(daiVault.REDEEM_TYPEHASH(), vm.eip712HashType('TokenizedRedeem'));
+    assertEq(
+      daiVault.REDEEM_TYPEHASH(),
+      keccak256(
+        'TokenizedRedeem(address owner,uint256 shares,address receiver,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_permit_typeHash() public view {
-  //   assertEq(daiVault.PERMIT_TYPEHASH(), vm.eip712HashType('Permit'));
-  //   assertEq(
-  //     daiVault.PERMIT_TYPEHASH(),
-  //     keccak256(
-  //       'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
-  //     )
-  //   );
-  // }
+  function test_permit_typeHash() public view {
+    assertEq(daiVault.PERMIT_TYPEHASH(), vm.eip712HashType('Permit'));
+    assertEq(
+      daiVault.PERMIT_TYPEHASH(),
+      keccak256(
+        'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 }

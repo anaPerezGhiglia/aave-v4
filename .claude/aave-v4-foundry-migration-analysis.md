@@ -22,37 +22,37 @@
 
 ### `[profile.default]`
 
-| Setting | Value |
-|---|---|
-| `src` | `src` |
-| `test` | `tests` |
-| `out` | `out` |
-| `libs` | `["lib"]` |
-| `fs_permissions` | `[{ access = "read", path = "tests/mocks/JsonBindings.sol" }]` |
-| `solc_version` | `0.8.28` |
-| `evm_version` | `cancun` |
-| `optimizer` | `true` |
-| `optimizer_runs` | `444444444444` |
-| `bytecode_hash` | `none` |
-| `gas_snapshot_check` | `false` |
-| `gas_limit` | `1099511627776` |
-| `dynamic_test_linking` | `true` |
+| Setting                | Value                                                          |
+| ---------------------- | -------------------------------------------------------------- |
+| `src`                  | `src`                                                          |
+| `test`                 | `tests`                                                        |
+| `out`                  | `out`                                                          |
+| `libs`                 | `["lib"]`                                                      |
+| `fs_permissions`       | `[{ access = "read", path = "tests/mocks/JsonBindings.sol" }]` |
+| `solc_version`         | `0.8.28`                                                       |
+| `evm_version`          | `cancun`                                                       |
+| `optimizer`            | `true`                                                         |
+| `optimizer_runs`       | `444444444444`                                                 |
+| `bytecode_hash`        | `none`                                                         |
+| `gas_snapshot_check`   | `false`                                                        |
+| `gas_limit`            | `1099511627776`                                                |
+| `dynamic_test_linking` | `true`                                                         |
 
 ### `additional_compiler_profiles`
 
-| Profile | optimizer | via_ir | optimizer_runs |
-|---|---|---|---|
-| `hub` | true | true | 22,300 |
-| `spoke` | true | true | 750 |
-| `tests` | true | false | 444,444,444,444 |
+| Profile | optimizer | via_ir | optimizer_runs  |
+| ------- | --------- | ------ | --------------- |
+| `hub`   | true      | true   | 22,300          |
+| `spoke` | true      | true   | 750             |
+| `tests` | true      | false  | 444,444,444,444 |
 
 ### `compilation_restrictions`
 
-| Path pattern | optimizer | via_ir | optimizer_runs |
-|---|---|---|---|
-| `src/hub/Hub.sol` | true | true | 22,300 |
-| `src/spoke/instances/SpokeInstance.sol` | true | true | 750 |
-| `tests/**` | true | false | 444,444,444,444 |
+| Path pattern                            | optimizer | via_ir | optimizer_runs  |
+| --------------------------------------- | --------- | ------ | --------------- |
+| `src/hub/Hub.sol`                       | true      | true   | 22,300          |
+| `src/spoke/instances/SpokeInstance.sol` | true      | true   | 750             |
+| `tests/**`                              | true      | false  | 444,444,444,444 |
 
 ### `[bind_json]`
 
@@ -110,15 +110,15 @@ Found in 10 files:
 - `tests/unit/AaveOracle.t.sol` — `forge-config: default.allow_internal_expect_revert = true`
 - `tests/unit/Hub/Hub.Rounding.t.sol` — `forge-config: default.disable_block_gas_limit = true`
 
-**Note:** All 10 directives are at **contract level** (placed on the contract definition, not on individual functions). Hardhat 3.3.0+ supports inline `forge-config:` at the **function level** ([#7355](https://github.com/NomicFoundation/hardhat/issues/7355) closed) but contract-level directives are still silently ignored. Additionally, `isolate` and `evm_version` are not yet supported inline even at function level (see [edr#1349](https://github.com/NomicFoundation/edr/issues/1349)).
+**Note:** All 10 directives are at **contract level** (placed on the contract definition, not on individual functions). Hardhat 3.3.0+ supports inline `forge-config:` at the **function level** ([#7355](https://github.com/NomicFoundation/hardhat/issues/7355) closed); Hardhat 3.5.0 / EDR `0.12.0-next.33` added function-level support for `isolate` and `evm_version` ([edr#1349](https://github.com/NomicFoundation/edr/issues/1349) closed). However, **contract-level** directives are still silently ignored — Hardhat only honors function-level inline config. No tracking issue for contract-level support found as of 2026-05-20.
 
 ## Forge-Dependent `package.json` Scripts
 
-| Script | Command | Forge feature |
-|---|---|---|
-| `rs:bind` | `forge bind --bindings-path ...` | Rust/Alloy bindings generation |
-| `rs:abis` | `forge build --out ... --extra-output-files abi` | ABI extraction |
-| `rs:generate` | `npm run rs:bind && npm run rs:abis` | Combined binding + ABI |
+| Script        | Command                                          | Forge feature                  |
+| ------------- | ------------------------------------------------ | ------------------------------ |
+| `rs:bind`     | `forge bind --bindings-path ...`                 | Rust/Alloy bindings generation |
+| `rs:abis`     | `forge build --out ... --extra-output-files abi` | ABI extraction                 |
+| `rs:generate` | `npm run rs:bind && npm run rs:abis`             | Combined binding + ABI         |
 
 **No `test`, `build`, `coverage`, or `snapshot` scripts** — only `lint`, `lint:fix`, `rs:*`, and `prepare`.
 

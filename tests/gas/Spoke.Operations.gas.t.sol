@@ -222,115 +222,113 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     vm.stopPrank();
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_multicall_ops() public {
-  //   vm.startPrank(bob);
-  //   spoke.supply(reserveId.dai, 1000e18, bob);
-  //   spoke.supply(reserveId.usdx, 1000e6, bob);
-  //   spoke.supply(reserveId.wbtc, 1e18, bob);
-  //
-  //   bytes[] memory calls = new bytes[](2);
-  //   calls[0] = abi.encodeCall(ISpokeBase.supply, (reserveId.dai, 1000e18, bob));
-  //   calls[1] = abi.encodeCall(ISpoke.setUsingAsCollateral, (reserveId.dai, true, bob));
-  //
-  //   spoke.multicall(calls);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'supply + enable collateral (multicall)');
-  //
-  //   // supplyWithPermit (dai)
-  //   tokenList.dai.approve(address(spoke), 0);
-  //   EIP712Types.Permit memory permit = EIP712Types.Permit({
-  //     owner: bob,
-  //     spender: address(spoke),
-  //     value: 1000e6,
-  //     nonce: tokenList.dai.nonces(bob),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobPk, _getTypedDataHash(tokenList.dai, permit));
-  //   calls[0] = abi.encodeCall(
-  //     ISpoke.permitReserve,
-  //     (reserveId.dai, permit.owner, permit.value, permit.deadline, v, r, s)
-  //   );
-  //   calls[1] = abi.encodeCall(ISpokeBase.supply, (reserveId.dai, permit.value, permit.owner));
-  //   spoke.multicall(calls);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + supply (multicall)');
-  //
-  //   spoke.borrow(reserveId.usdx, 500e6, bob);
-  //
-  //   // repayWithPermit (usdx)
-  //   tokenList.usdx.approve(address(spoke), 0);
-  //   permit = EIP712Types.Permit({
-  //     owner: bob,
-  //     spender: address(spoke),
-  //     value: 500e6,
-  //     nonce: tokenList.usdx.nonces(bob),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   (v, r, s) = vm.sign(bobPk, _getTypedDataHash(tokenList.usdx, permit));
-  //   calls[0] = abi.encodeCall(
-  //     ISpoke.permitReserve,
-  //     (reserveId.usdx, permit.owner, permit.value, permit.deadline, v, r, s)
-  //   );
-  //   calls[1] = abi.encodeCall(ISpokeBase.repay, (reserveId.usdx, permit.value, permit.owner));
-  //   spoke.multicall(calls);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + repay (multicall)');
-  //
-  //   // supplyWithPermitAndEnableCollateral (wbtc)
-  //   calls = new bytes[](3);
-  //   tokenList.wbtc.approve(address(spoke), 0);
-  //   permit = EIP712Types.Permit({
-  //     owner: bob,
-  //     spender: address(spoke),
-  //     value: 1000e6,
-  //     nonce: tokenList.wbtc.nonces(bob),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   (v, r, s) = vm.sign(bobPk, _getTypedDataHash(tokenList.wbtc, permit));
-  //   calls[0] = abi.encodeCall(
-  //     ISpoke.permitReserve,
-  //     (reserveId.wbtc, permit.owner, permit.value, permit.deadline, v, r, s)
-  //   );
-  //   calls[1] = abi.encodeCall(ISpokeBase.supply, (reserveId.wbtc, permit.value, permit.owner));
-  //   calls[2] = abi.encodeCall(ISpoke.setUsingAsCollateral, (reserveId.wbtc, true, permit.owner));
-  //   spoke.multicall(calls);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + supply + enable collateral (multicall)');
-  //
-  //   vm.stopPrank();
-  // }
+  function test_multicall_ops() public {
+    vm.startPrank(bob);
+    spoke.supply(reserveId.dai, 1000e18, bob);
+    spoke.supply(reserveId.usdx, 1000e6, bob);
+    spoke.supply(reserveId.wbtc, 1e18, bob);
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_setUserPositionManagersWithSig() public {
-  //   (address user, uint256 userPk) = makeAddrAndKey('user');
-  //   address positionManager = makeAddr('positionManager');
-  //   vm.prank(SPOKE_ADMIN);
-  //   spoke.updatePositionManager(positionManager, true);
-  //
-  //   uint192 nonceKey = 100;
-  //   vm.prank(user);
-  //   spoke.useNonce(nonceKey);
-  //
-  //   ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
-  //   updates[0] = ISpoke.PositionManagerUpdate(positionManager, true);
-  //
-  //   ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
-  //     onBehalfOf: user,
-  //     updates: updates,
-  //     nonce: spoke.nonces(user, nonceKey),
-  //     deadline: vm.getBlockTimestamp()
-  //   });
-  //   (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, _getTypedDataHash(spoke, p));
-  //   bytes memory signature = abi.encodePacked(r, s, v);
-  //
-  //   spoke.setUserPositionManagersWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'setUserPositionManagersWithSig: enable');
-  //
-  //   p.updates[0].approve = false;
-  //   p.nonce = spoke.nonces(user, nonceKey);
-  //   (v, r, s) = vm.sign(userPk, _getTypedDataHash(spoke, p));
-  //   signature = abi.encodePacked(r, s, v);
-  //
-  //   spoke.setUserPositionManagersWithSig(p, signature);
-  //   vm.snapshotGasLastCall(NAMESPACE, 'setUserPositionManagersWithSig: disable');
-  // }
+    bytes[] memory calls = new bytes[](2);
+    calls[0] = abi.encodeCall(ISpokeBase.supply, (reserveId.dai, 1000e18, bob));
+    calls[1] = abi.encodeCall(ISpoke.setUsingAsCollateral, (reserveId.dai, true, bob));
+
+    spoke.multicall(calls);
+    vm.snapshotGasLastCall(NAMESPACE, 'supply + enable collateral (multicall)');
+
+    // supplyWithPermit (dai)
+    tokenList.dai.approve(address(spoke), 0);
+    EIP712Types.Permit memory permit = EIP712Types.Permit({
+      owner: bob,
+      spender: address(spoke),
+      value: 1000e6,
+      nonce: tokenList.dai.nonces(bob),
+      deadline: vm.getBlockTimestamp()
+    });
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobPk, _getTypedDataHash(tokenList.dai, permit));
+    calls[0] = abi.encodeCall(
+      ISpoke.permitReserve,
+      (reserveId.dai, permit.owner, permit.value, permit.deadline, v, r, s)
+    );
+    calls[1] = abi.encodeCall(ISpokeBase.supply, (reserveId.dai, permit.value, permit.owner));
+    spoke.multicall(calls);
+    vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + supply (multicall)');
+
+    spoke.borrow(reserveId.usdx, 500e6, bob);
+
+    // repayWithPermit (usdx)
+    tokenList.usdx.approve(address(spoke), 0);
+    permit = EIP712Types.Permit({
+      owner: bob,
+      spender: address(spoke),
+      value: 500e6,
+      nonce: tokenList.usdx.nonces(bob),
+      deadline: vm.getBlockTimestamp()
+    });
+    (v, r, s) = vm.sign(bobPk, _getTypedDataHash(tokenList.usdx, permit));
+    calls[0] = abi.encodeCall(
+      ISpoke.permitReserve,
+      (reserveId.usdx, permit.owner, permit.value, permit.deadline, v, r, s)
+    );
+    calls[1] = abi.encodeCall(ISpokeBase.repay, (reserveId.usdx, permit.value, permit.owner));
+    spoke.multicall(calls);
+    vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + repay (multicall)');
+
+    // supplyWithPermitAndEnableCollateral (wbtc)
+    calls = new bytes[](3);
+    tokenList.wbtc.approve(address(spoke), 0);
+    permit = EIP712Types.Permit({
+      owner: bob,
+      spender: address(spoke),
+      value: 1000e6,
+      nonce: tokenList.wbtc.nonces(bob),
+      deadline: vm.getBlockTimestamp()
+    });
+    (v, r, s) = vm.sign(bobPk, _getTypedDataHash(tokenList.wbtc, permit));
+    calls[0] = abi.encodeCall(
+      ISpoke.permitReserve,
+      (reserveId.wbtc, permit.owner, permit.value, permit.deadline, v, r, s)
+    );
+    calls[1] = abi.encodeCall(ISpokeBase.supply, (reserveId.wbtc, permit.value, permit.owner));
+    calls[2] = abi.encodeCall(ISpoke.setUsingAsCollateral, (reserveId.wbtc, true, permit.owner));
+    spoke.multicall(calls);
+    vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + supply + enable collateral (multicall)');
+
+    vm.stopPrank();
+  }
+
+  function test_setUserPositionManagersWithSig() public {
+    (address user, uint256 userPk) = makeAddrAndKey('user');
+    address positionManager = makeAddr('positionManager');
+    vm.prank(SPOKE_ADMIN);
+    spoke.updatePositionManager(positionManager, true);
+
+    uint192 nonceKey = 100;
+    vm.prank(user);
+    spoke.useNonce(nonceKey);
+
+    ISpoke.PositionManagerUpdate[] memory updates = new ISpoke.PositionManagerUpdate[](1);
+    updates[0] = ISpoke.PositionManagerUpdate(positionManager, true);
+
+    ISpoke.SetUserPositionManagers memory p = ISpoke.SetUserPositionManagers({
+      onBehalfOf: user,
+      updates: updates,
+      nonce: spoke.nonces(user, nonceKey),
+      deadline: vm.getBlockTimestamp()
+    });
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, _getTypedDataHash(spoke, p));
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    spoke.setUserPositionManagersWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'setUserPositionManagersWithSig: enable');
+
+    p.updates[0].approve = false;
+    p.nonce = spoke.nonces(user, nonceKey);
+    (v, r, s) = vm.sign(userPk, _getTypedDataHash(spoke, p));
+    signature = abi.encodePacked(r, s, v);
+
+    spoke.setUserPositionManagersWithSig(p, signature);
+    vm.snapshotGasLastCall(NAMESPACE, 'setUserPositionManagersWithSig: disable');
+  }
 
   function _seed() internal {
     vm.startPrank(address(spoke2));

@@ -46,217 +46,205 @@ contract TakerPositionManagerPermitTest is TakerPositionManagerBaseTest {
     assertEq(instance.DOMAIN_SEPARATOR(), expectedDomainSeparator);
   }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_withdrawPermit_typeHash() public view {
-  // assertEq(positionManager.WITHDRAW_PERMIT_TYPEHASH(), vm.eip712HashType('WithdrawPermit'));
-  // assertEq(
-  // positionManager.WITHDRAW_PERMIT_TYPEHASH(),
-  // keccak256(
-  // 'WithdrawPermit(address spoke,uint256 reserveId,address owner,address spender,uint256 amount,uint256 nonce,uint256 deadline)'
-  // )
-  // );
-  // }
+  function test_withdrawPermit_typeHash() public view {
+    assertEq(positionManager.WITHDRAW_PERMIT_TYPEHASH(), vm.eip712HashType('WithdrawPermit'));
+    assertEq(
+      positionManager.WITHDRAW_PERMIT_TYPEHASH(),
+      keccak256(
+        'WithdrawPermit(address spoke,uint256 reserveId,address owner,address spender,uint256 amount,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashType() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_borrowPermit_typeHash() public view {
-  // assertEq(positionManager.BORROW_PERMIT_TYPEHASH(), vm.eip712HashType('BorrowPermit'));
-  // assertEq(
-  // positionManager.BORROW_PERMIT_TYPEHASH(),
-  // keccak256(
-  // 'BorrowPermit(address spoke,uint256 reserveId,address owner,address spender,uint256 amount,uint256 nonce,uint256 deadline)'
-  // )
-  // );
-  // }
+  function test_borrowPermit_typeHash() public view {
+    assertEq(positionManager.BORROW_PERMIT_TYPEHASH(), vm.eip712HashType('BorrowPermit'));
+    assertEq(
+      positionManager.BORROW_PERMIT_TYPEHASH(),
+      keccak256(
+        'BorrowPermit(address spoke,uint256 reserveId,address owner,address spender,uint256 amount,uint256 nonce,uint256 deadline)'
+      )
+    );
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveWithdrawWithSig_fuzz(
-  // address spender,
-  // uint256 reserveId,
-  // uint256 amount
-  // ) public {
-  // vm.assume(spender != address(0));
-  // reserveId = bound(reserveId, 0, spoke1.getReserveCount() - 1);
-  // amount = bound(amount, 1, mintAmount_DAI);
-  //
-  // ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
-  // spender,
-  // alice,
-  // _warpBeforeRandomDeadline()
-  // );
-  // p.amount = amount;
-  // p.reserveId = reserveId;
-  // p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectEmit(address(positionManager));
-  // emit ITakerPositionManager.WithdrawApproval(address(spoke1), reserveId, alice, spender, amount);
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveWithdrawWithSig(p, signature);
-  //
-  // assertEq(positionManager.withdrawAllowance(address(spoke1), reserveId, alice, spender), amount);
-  // }
+  function test_approveWithdrawWithSig_fuzz(
+    address spender,
+    uint256 reserveId,
+    uint256 amount
+  ) public {
+    vm.assume(spender != address(0));
+    reserveId = bound(reserveId, 0, spoke1.getReserveCount() - 1);
+    amount = bound(amount, 1, mintAmount_DAI);
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveWithdrawWithSig_revertsWith_InvalidSignature_dueTo_ExpiredDeadline() public {
-  // ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
-  // vm.randomAddress(),
-  // alice,
-  // _warpAfterRandomDeadline()
-  // );
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveWithdrawWithSig(p, signature);
-  // }
+    ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
+      spender,
+      alice,
+      _warpBeforeRandomDeadline()
+    );
+    p.amount = amount;
+    p.reserveId = reserveId;
+    p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveWithdrawWithSig_revertsWith_InvalidSignature_dueTo_InvalidSigner() public {
-  // (address randomUser, uint256 randomUserPk) = makeAddrAndKey(string(vm.randomBytes(32)));
-  // address onBehalfOf = vm.randomAddress();
-  // while (onBehalfOf == randomUser) onBehalfOf = vm.randomAddress();
-  //
-  // ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
-  // randomUser,
-  // onBehalfOf,
-  // _warpAfterRandomDeadline()
-  // );
-  // bytes memory signature = _sign(randomUserPk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveWithdrawWithSig(p, signature);
-  // }
+    vm.expectEmit(address(positionManager));
+    emit ITakerPositionManager.WithdrawApproval(address(spoke1), reserveId, alice, spender, amount);
+    vm.prank(vm.randomAddress());
+    positionManager.approveWithdrawWithSig(p, signature);
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveWithdrawWithSig_revertsWith_InvalidAccountNonce(bytes32) public {
-  // ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
-  // vm.randomAddress(),
-  // alice,
-  // _warpBeforeRandomDeadline()
-  // );
-  // uint192 nonceKey = _randomNonceKey();
-  // uint256 currentNonce = _burnRandomNoncesAtKey(positionManager, p.owner, nonceKey);
-  // p.nonce = _getRandomInvalidNonceAtKey(positionManager, p.owner, nonceKey);
-  //
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(
-  // abi.encodeWithSelector(INoncesKeyed.InvalidAccountNonce.selector, p.owner, currentNonce)
-  // );
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveWithdrawWithSig(p, signature);
-  // }
+    assertEq(positionManager.withdrawAllowance(address(spoke1), reserveId, alice, spender), amount);
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveWithdrawWithSig_revertsWith_SpokeNotRegistered() public {
-  // ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
-  // bob,
-  // alice,
-  // _warpBeforeRandomDeadline()
-  // );
-  // p.spoke = address(spoke2);
-  // p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(IPositionManagerBase.SpokeNotRegistered.selector);
-  // vm.prank(alice);
-  // positionManager.approveWithdrawWithSig(p, signature);
-  // }
+  function test_approveWithdrawWithSig_revertsWith_InvalidSignature_dueTo_ExpiredDeadline() public {
+    ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
+      vm.randomAddress(),
+      alice,
+      _warpAfterRandomDeadline()
+    );
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveBorrowWithSig_fuzz(
-  // address spender,
-  // uint256 reserveId,
-  // uint256 amount
-  // ) public {
-  // vm.assume(spender != address(0));
-  // reserveId = bound(reserveId, 0, spoke1.getReserveCount() - 1);
-  // amount = bound(amount, 1, mintAmount_DAI);
-  //
-  // ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
-  // spender,
-  // alice,
-  // _warpBeforeRandomDeadline()
-  // );
-  // p.amount = amount;
-  // p.reserveId = reserveId;
-  // p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectEmit(address(positionManager));
-  // emit ITakerPositionManager.BorrowApproval(address(spoke1), reserveId, alice, spender, amount);
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveBorrowWithSig(p, signature);
-  //
-  // assertEq(positionManager.borrowAllowance(address(spoke1), reserveId, alice, spender), amount);
-  // }
+    vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
+    vm.prank(vm.randomAddress());
+    positionManager.approveWithdrawWithSig(p, signature);
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveBorrowWithSig_revertsWith_InvalidSignature_dueTo_ExpiredDeadline() public {
-  // ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
-  // vm.randomAddress(),
-  // alice,
-  // _warpAfterRandomDeadline()
-  // );
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveBorrowWithSig(p, signature);
-  // }
+  function test_approveWithdrawWithSig_revertsWith_InvalidSignature_dueTo_InvalidSigner() public {
+    (address randomUser, uint256 randomUserPk) = makeAddrAndKey(string(vm.randomBytes(32)));
+    address onBehalfOf = vm.randomAddress();
+    while (onBehalfOf == randomUser) onBehalfOf = vm.randomAddress();
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveBorrowWithSig_revertsWith_InvalidSignature_dueTo_InvalidSigner() public {
-  // (address randomUser, uint256 randomUserPk) = makeAddrAndKey(string(vm.randomBytes(32)));
-  // address onBehalfOf = vm.randomAddress();
-  // while (onBehalfOf == randomUser) onBehalfOf = vm.randomAddress();
-  //
-  // ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
-  // randomUser,
-  // onBehalfOf,
-  // _warpAfterRandomDeadline()
-  // );
-  // bytes memory signature = _sign(randomUserPk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveBorrowWithSig(p, signature);
-  // }
+    ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
+      randomUser,
+      onBehalfOf,
+      _warpAfterRandomDeadline()
+    );
+    bytes memory signature = _sign(randomUserPk, _getTypedDataHash(positionManager, p));
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveBorrowWithSig_revertsWith_InvalidAccountNonce(bytes32) public {
-  // ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
-  // vm.randomAddress(),
-  // alice,
-  // _warpBeforeRandomDeadline()
-  // );
-  // uint192 nonceKey = _randomNonceKey();
-  // uint256 currentNonce = _burnRandomNoncesAtKey(positionManager, p.owner, nonceKey);
-  // p.nonce = _getRandomInvalidNonceAtKey(positionManager, p.owner, nonceKey);
-  //
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(
-  // abi.encodeWithSelector(INoncesKeyed.InvalidAccountNonce.selector, p.owner, currentNonce)
-  // );
-  // vm.prank(vm.randomAddress());
-  // positionManager.approveBorrowWithSig(p, signature);
-  // }
+    vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
+    vm.prank(vm.randomAddress());
+    positionManager.approveWithdrawWithSig(p, signature);
+  }
 
-  // HARDHAT-SKIP: This test uses vm.eip712HashStruct() which is not supported by Hardhat 3 (UnsupportedCheatcode).
-  // function test_approveBorrowWithSig_revertsWith_SpokeNotRegistered() public {
-  // ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
-  // bob,
-  // alice,
-  // _warpBeforeRandomDeadline()
-  // );
-  // p.spoke = address(spoke2);
-  // p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
-  // bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
-  //
-  // vm.expectRevert(IPositionManagerBase.SpokeNotRegistered.selector);
-  // vm.prank(alice);
-  // positionManager.approveBorrowWithSig(p, signature);
-  // }
+  function test_approveWithdrawWithSig_revertsWith_InvalidAccountNonce(bytes32) public {
+    ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
+      vm.randomAddress(),
+      alice,
+      _warpBeforeRandomDeadline()
+    );
+    uint192 nonceKey = _randomNonceKey();
+    uint256 currentNonce = _burnRandomNoncesAtKey(positionManager, p.owner, nonceKey);
+    p.nonce = _getRandomInvalidNonceAtKey(positionManager, p.owner, nonceKey);
+
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
+
+    vm.expectRevert(
+      abi.encodeWithSelector(INoncesKeyed.InvalidAccountNonce.selector, p.owner, currentNonce)
+    );
+    vm.prank(vm.randomAddress());
+    positionManager.approveWithdrawWithSig(p, signature);
+  }
+
+  function test_approveWithdrawWithSig_revertsWith_SpokeNotRegistered() public {
+    ITakerPositionManager.WithdrawPermit memory p = _withdrawPermitData(
+      bob,
+      alice,
+      _warpBeforeRandomDeadline()
+    );
+    p.spoke = address(spoke2);
+    p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
+
+    vm.expectRevert(IPositionManagerBase.SpokeNotRegistered.selector);
+    vm.prank(alice);
+    positionManager.approveWithdrawWithSig(p, signature);
+  }
+
+  function test_approveBorrowWithSig_fuzz(
+    address spender,
+    uint256 reserveId,
+    uint256 amount
+  ) public {
+    vm.assume(spender != address(0));
+    reserveId = bound(reserveId, 0, spoke1.getReserveCount() - 1);
+    amount = bound(amount, 1, mintAmount_DAI);
+
+    ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
+      spender,
+      alice,
+      _warpBeforeRandomDeadline()
+    );
+    p.amount = amount;
+    p.reserveId = reserveId;
+    p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
+
+    vm.expectEmit(address(positionManager));
+    emit ITakerPositionManager.BorrowApproval(address(spoke1), reserveId, alice, spender, amount);
+    vm.prank(vm.randomAddress());
+    positionManager.approveBorrowWithSig(p, signature);
+
+    assertEq(positionManager.borrowAllowance(address(spoke1), reserveId, alice, spender), amount);
+  }
+
+  function test_approveBorrowWithSig_revertsWith_InvalidSignature_dueTo_ExpiredDeadline() public {
+    ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
+      vm.randomAddress(),
+      alice,
+      _warpAfterRandomDeadline()
+    );
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
+
+    vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
+    vm.prank(vm.randomAddress());
+    positionManager.approveBorrowWithSig(p, signature);
+  }
+
+  function test_approveBorrowWithSig_revertsWith_InvalidSignature_dueTo_InvalidSigner() public {
+    (address randomUser, uint256 randomUserPk) = makeAddrAndKey(string(vm.randomBytes(32)));
+    address onBehalfOf = vm.randomAddress();
+    while (onBehalfOf == randomUser) onBehalfOf = vm.randomAddress();
+
+    ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
+      randomUser,
+      onBehalfOf,
+      _warpAfterRandomDeadline()
+    );
+    bytes memory signature = _sign(randomUserPk, _getTypedDataHash(positionManager, p));
+
+    vm.expectRevert(IIntentConsumer.InvalidSignature.selector);
+    vm.prank(vm.randomAddress());
+    positionManager.approveBorrowWithSig(p, signature);
+  }
+
+  function test_approveBorrowWithSig_revertsWith_InvalidAccountNonce(bytes32) public {
+    ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
+      vm.randomAddress(),
+      alice,
+      _warpBeforeRandomDeadline()
+    );
+    uint192 nonceKey = _randomNonceKey();
+    uint256 currentNonce = _burnRandomNoncesAtKey(positionManager, p.owner, nonceKey);
+    p.nonce = _getRandomInvalidNonceAtKey(positionManager, p.owner, nonceKey);
+
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
+
+    vm.expectRevert(
+      abi.encodeWithSelector(INoncesKeyed.InvalidAccountNonce.selector, p.owner, currentNonce)
+    );
+    vm.prank(vm.randomAddress());
+    positionManager.approveBorrowWithSig(p, signature);
+  }
+
+  function test_approveBorrowWithSig_revertsWith_SpokeNotRegistered() public {
+    ITakerPositionManager.BorrowPermit memory p = _approveBorrowData(
+      bob,
+      alice,
+      _warpBeforeRandomDeadline()
+    );
+    p.spoke = address(spoke2);
+    p.nonce = _burnRandomNoncesAtKey(positionManager, alice);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(positionManager, p));
+
+    vm.expectRevert(IPositionManagerBase.SpokeNotRegistered.selector);
+    vm.prank(alice);
+    positionManager.approveBorrowWithSig(p, signature);
+  }
 }
