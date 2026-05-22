@@ -1,85 +1,101 @@
-// SPDX-License-Identifier: UNLICENSED
-// Copyright (c) 2025 Aave Labs
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import 'tests/unit/TokenizationSpoke/TokenizationSpoke.Base.t.sol';
+import 'tests/helpers/tokenization-spoke/TokenizationSpokeHelpers.sol';
+import 'tests/setup/Base.t.sol';
 
 /// forge-config: default.isolate = true
-contract TokenizationSpokeOperations_Gas_Tests is TokenizationSpokeBaseTest {
+contract TokenizationSpokeOperations_Gas_Tests is Base, TokenizationSpokeHelpers {
   string internal constant NAMESPACE = 'TokenizationSpoke.Operations';
-  ITokenizationSpoke internal vault;
+  ITokenizationSpoke internal daiTokenizationSpoke;
   uint192 internal nonceKey = 100;
+
+  string internal constant SHARE_NAME = 'Core Hub DAI';
+  string internal constant SHARE_SYMBOL = 'chDAI';
 
   function setUp() public virtual override {
     super.setUp();
-    vault = daiVault;
-    Utils.approve(vault, alice, 2100e18);
+    daiTokenizationSpoke = _deployTokenizationSpoke({
+      hub: hub1,
+      underlying: address(tokenList.dai),
+      shareName: SHARE_NAME,
+      shareSymbol: SHARE_SYMBOL,
+      proxyAdminOwner: ADMIN
+    });
+    _registerTokenizationSpoke({
+      hub: hub1,
+      assetId: daiAssetId,
+      tokenizationSpoke: daiTokenizationSpoke,
+      admin: ADMIN
+    });
+
+    SpokeActions.approve({vault: daiTokenizationSpoke, owner: alice, amount: 2100e18});
     vm.startPrank(alice);
-    vault.deposit(100e18, alice);
-    vault.useNonce(nonceKey);
-    vault.usePermitNonce();
+    daiTokenizationSpoke.deposit(100e18, alice);
+    daiTokenizationSpoke.useNonce(nonceKey);
+    daiTokenizationSpoke.usePermitNonce();
     vm.stopPrank();
   }
 
   function test_deposit() public {
     vm.prank(alice);
-    vault.deposit(1000e18, alice);
+    daiTokenizationSpoke.deposit(1000e18, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'deposit');
   }
 
   function test_mint() public {
-    uint256 shares = vault.previewMint(1000e18);
+    uint256 shares = daiTokenizationSpoke.previewMint(1000e18);
     vm.prank(alice);
-    vault.mint(shares, alice);
+    daiTokenizationSpoke.mint(shares, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'mint');
   }
 
   function test_withdraw() public {
     vm.startPrank(alice);
-    vault.deposit(1000e18, alice);
-    vault.withdraw(500e18, alice, alice);
+    daiTokenizationSpoke.deposit(1000e18, alice);
+    daiTokenizationSpoke.withdraw(500e18, alice, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'withdraw: self, partial');
 
-    uint256 balance = vault.maxWithdraw(alice);
-    vault.withdraw(balance, alice, alice);
+    uint256 balance = daiTokenizationSpoke.maxWithdraw(alice);
+    daiTokenizationSpoke.withdraw(balance, alice, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'withdraw: self, full');
 
-    vault.deposit(1000e18, alice);
-    vault.approve(bob, 1000e18);
+    daiTokenizationSpoke.deposit(1000e18, alice);
+    daiTokenizationSpoke.approve(bob, 1000e18);
     vm.stopPrank();
 
     vm.startPrank(bob);
-    vault.withdraw(500e18, bob, alice);
+    daiTokenizationSpoke.withdraw(500e18, bob, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'withdraw: on behalf, partial');
 
-    balance = vault.maxWithdraw(alice);
-    vault.withdraw(balance, bob, alice);
+    balance = daiTokenizationSpoke.maxWithdraw(alice);
+    daiTokenizationSpoke.withdraw(balance, bob, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'withdraw: on behalf, full');
     vm.stopPrank();
   }
 
   function test_redeem() public {
     vm.startPrank(alice);
-    vault.deposit(1000e18, alice);
-    uint256 shares = vault.balanceOf(alice);
-    vault.redeem(shares / 2, alice, alice);
+    daiTokenizationSpoke.deposit(1000e18, alice);
+    uint256 shares = daiTokenizationSpoke.balanceOf(alice);
+    daiTokenizationSpoke.redeem(shares / 2, alice, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'redeem: self, partial');
 
-    shares = vault.maxRedeem(alice);
-    vault.redeem(shares, alice, alice);
+    shares = daiTokenizationSpoke.maxRedeem(alice);
+    daiTokenizationSpoke.redeem(shares, alice, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'redeem: self, full');
 
-    vault.deposit(1000e18, alice);
-    vault.approve(bob, 1000e18);
+    daiTokenizationSpoke.deposit(1000e18, alice);
+    daiTokenizationSpoke.approve(bob, 1000e18);
     vm.stopPrank();
 
     vm.startPrank(bob);
-    shares = vault.balanceOf(alice);
-    vault.redeem(shares / 2, bob, alice);
+    shares = daiTokenizationSpoke.balanceOf(alice);
+    daiTokenizationSpoke.redeem(shares / 2, bob, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'redeem: on behalf, partial');
 
-    shares = vault.maxRedeem(alice);
-    vault.redeem(shares, bob, alice);
+    shares = daiTokenizationSpoke.maxRedeem(alice);
+    daiTokenizationSpoke.redeem(shares, bob, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'redeem: on behalf, full');
     vm.stopPrank();
   }
@@ -89,28 +105,28 @@ contract TokenizationSpokeOperations_Gas_Tests is TokenizationSpokeBaseTest {
       depositor: alice,
       assets: 1000e18,
       receiver: alice,
-      nonce: vault.nonces(alice, nonceKey),
+      nonce: daiTokenizationSpoke.nonces(alice, nonceKey),
       deadline: vm.getBlockTimestamp()
     });
-    bytes memory signature = _sign(alicePk, _getTypedDataHash(vault, p));
-    Utils.approve(vault, alice, p.assets);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(daiTokenizationSpoke, p));
+    SpokeActions.approve({vault: daiTokenizationSpoke, owner: alice, amount: p.assets});
 
-    vault.depositWithSig(p, signature);
+    daiTokenizationSpoke.depositWithSig(p, signature);
     vm.snapshotGasLastCall(NAMESPACE, 'depositWithSig');
   }
 
   function test_mintWithSig() public {
     ITokenizationSpoke.TokenizedMint memory p = ITokenizationSpoke.TokenizedMint({
       depositor: alice,
-      shares: vault.previewMint(1000e18),
+      shares: daiTokenizationSpoke.previewMint(1000e18),
       receiver: alice,
-      nonce: vault.nonces(alice, nonceKey),
+      nonce: daiTokenizationSpoke.nonces(alice, nonceKey),
       deadline: vm.getBlockTimestamp()
     });
-    bytes memory signature = _sign(alicePk, _getTypedDataHash(vault, p));
-    Utils.approve(vault, alice, p.shares);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(daiTokenizationSpoke, p));
+    SpokeActions.approve({vault: daiTokenizationSpoke, owner: alice, amount: p.shares});
 
-    vault.mintWithSig(p, signature);
+    daiTokenizationSpoke.mintWithSig(p, signature);
     vm.snapshotGasLastCall(NAMESPACE, 'mintWithSig');
   }
 
@@ -119,15 +135,15 @@ contract TokenizationSpokeOperations_Gas_Tests is TokenizationSpokeBaseTest {
       owner: alice,
       assets: 500e18,
       receiver: alice,
-      nonce: vault.nonces(alice, nonceKey),
+      nonce: daiTokenizationSpoke.nonces(alice, nonceKey),
       deadline: vm.getBlockTimestamp()
     });
-    bytes memory signature = _sign(alicePk, _getTypedDataHash(vault, p));
-    Utils.approve(vault, alice, p.assets);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(daiTokenizationSpoke, p));
+    SpokeActions.approve({vault: daiTokenizationSpoke, owner: alice, amount: p.assets});
     vm.prank(alice);
-    vault.deposit(p.assets, alice);
+    daiTokenizationSpoke.deposit(p.assets, alice);
 
-    vault.withdrawWithSig(p, signature);
+    daiTokenizationSpoke.withdrawWithSig(p, signature);
     vm.snapshotGasLastCall(NAMESPACE, 'withdrawWithSig');
   }
 
@@ -136,15 +152,15 @@ contract TokenizationSpokeOperations_Gas_Tests is TokenizationSpokeBaseTest {
       owner: alice,
       shares: 1000e18,
       receiver: alice,
-      nonce: vault.nonces(alice, nonceKey),
+      nonce: daiTokenizationSpoke.nonces(alice, nonceKey),
       deadline: vm.getBlockTimestamp()
     });
-    bytes memory signature = _sign(alicePk, _getTypedDataHash(vault, p));
-    Utils.approve(vault, alice, p.shares);
+    bytes memory signature = _sign(alicePk, _getTypedDataHash(daiTokenizationSpoke, p));
+    SpokeActions.approve({vault: daiTokenizationSpoke, owner: alice, amount: p.shares});
     vm.prank(alice);
-    vault.mint(p.shares, alice);
+    daiTokenizationSpoke.mint(p.shares, alice);
 
-    vault.redeemWithSig(p, signature);
+    daiTokenizationSpoke.redeemWithSig(p, signature);
     vm.snapshotGasLastCall(NAMESPACE, 'redeemWithSig');
   }
 
@@ -153,17 +169,17 @@ contract TokenizationSpokeOperations_Gas_Tests is TokenizationSpokeBaseTest {
       owner: alice,
       spender: bob,
       value: 1000e18,
-      nonce: vault.nonces(alice),
+      nonce: daiTokenizationSpoke.nonces(alice),
       deadline: vm.getBlockTimestamp()
     });
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, _getTypedDataHash(vault, p));
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, _getTypedDataHash(daiTokenizationSpoke, p));
 
-    vm.expectEmit(address(vault));
+    vm.expectEmit(address(daiTokenizationSpoke));
     emit IERC20.Approval(p.owner, p.spender, p.value);
 
-    vault.permit(p.owner, p.spender, p.value, p.deadline, v, r, s);
+    daiTokenizationSpoke.permit(p.owner, p.spender, p.value, p.deadline, v, r, s);
     vm.snapshotGasLastCall(NAMESPACE, 'permit');
 
-    assertEq(vault.allowance(p.owner, p.spender), p.value);
+    assertEq(daiTokenizationSpoke.allowance(p.owner, p.spender), p.value);
   }
 }

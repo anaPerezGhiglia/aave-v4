@@ -1,19 +1,17 @@
-// SPDX-License-Identifier: UNLICENSED
-// Copyright (c) 2025 Aave Labs
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import 'tests/unit/Spoke/SpokeBase.t.sol';
+import 'tests/setup/Base.t.sol';
 
 /// forge-config: default.isolate = true
-contract PositionManager_Gas_Tests is SpokeBase {
+contract PositionManager_Gas_Tests is Base {
   string internal NAMESPACE = 'PositionManagerBase.Operations';
 
   PositionManagerBaseWrapper public positionManager;
   uint192 internal nonceKey = 0;
 
   function setUp() public virtual override {
-    deployFixtures();
-    initEnvironment();
+    super.setUp();
 
     positionManager = new PositionManagerBaseWrapper(address(ADMIN));
 
@@ -55,14 +53,13 @@ contract PositionManager_Gas_Tests is SpokeBase {
 }
 
 /// forge-config: default.isolate = true
-contract GiverPositionManager_Gas_Tests is SpokeBase {
+contract GiverPositionManager_Gas_Tests is Base {
   string internal NAMESPACE = 'GiverPositionManager.Operations';
 
   GiverPositionManager public positionManager;
 
   function setUp() public virtual override {
-    deployFixtures();
-    initEnvironment();
+    super.setUp();
 
     positionManager = new GiverPositionManager(address(ADMIN));
     vm.prank(SPOKE_ADMIN);
@@ -77,7 +74,13 @@ contract GiverPositionManager_Gas_Tests is SpokeBase {
 
   function test_supplyOnBehalfOf() public {
     uint256 amount = 100e18;
-    Utils.supply(spoke1, _daiReserveId(spoke1), alice, amount, alice);
+    SpokeActions.supply({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: amount,
+      onBehalfOf: alice
+    });
 
     vm.prank(bob);
     positionManager.supplyOnBehalfOf(address(spoke1), _daiReserveId(spoke1), amount, alice);
@@ -90,10 +93,34 @@ contract GiverPositionManager_Gas_Tests is SpokeBase {
     uint256 borrowAmount = 100e18;
     uint256 repayAmount = 50e18;
 
-    Utils.supplyCollateral(spoke1, _daiReserveId(spoke1), alice, aliceSupplyAmount, alice);
-    Utils.supply(spoke1, _daiReserveId(spoke1), bob, bobSupplyAmount, bob);
-    Utils.borrow(spoke1, _daiReserveId(spoke1), alice, borrowAmount, alice);
-    Utils.repay(spoke1, _daiReserveId(spoke1), alice, 1e18, alice);
+    SpokeActions.supplyCollateral({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: aliceSupplyAmount,
+      onBehalfOf: alice
+    });
+    SpokeActions.supply({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: bob,
+      amount: bobSupplyAmount,
+      onBehalfOf: bob
+    });
+    SpokeActions.borrow({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: borrowAmount,
+      onBehalfOf: alice
+    });
+    SpokeActions.repay({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: 1e18,
+      onBehalfOf: alice
+    });
 
     vm.prank(bob);
     positionManager.repayOnBehalfOf(address(spoke1), _daiReserveId(spoke1), repayAmount, alice);
@@ -102,7 +129,7 @@ contract GiverPositionManager_Gas_Tests is SpokeBase {
 }
 
 /// forge-config: default.isolate = true
-contract TakerPositionManager_Gas_Tests is SpokeBase {
+contract TakerPositionManager_Gas_Tests is Base {
   string internal NAMESPACE = 'TakerPositionManager.Operations';
 
   TakerPositionManager public positionManager;
@@ -110,8 +137,7 @@ contract TakerPositionManager_Gas_Tests is SpokeBase {
   uint192 internal creditNonceKey = 1;
 
   function setUp() public virtual override {
-    deployFixtures();
-    initEnvironment();
+    super.setUp();
 
     positionManager = new TakerPositionManager(address(ADMIN));
     vm.prank(SPOKE_ADMIN);
@@ -128,8 +154,20 @@ contract TakerPositionManager_Gas_Tests is SpokeBase {
     vm.prank(alice);
     positionManager.approveWithdraw(address(spoke1), _daiReserveId(spoke1), bob, UINT256_MAX);
 
-    Utils.supply(spoke1, _daiReserveId(spoke1), alice, mintAmount_DAI, alice);
-    Utils.withdraw(spoke1, _daiReserveId(spoke1), alice, amount, alice);
+    SpokeActions.supply({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: MAX_SUPPLY_AMOUNT_DAI,
+      onBehalfOf: alice
+    });
+    SpokeActions.withdraw({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: amount,
+      onBehalfOf: alice
+    });
 
     vm.prank(bob);
     positionManager.withdrawOnBehalfOf(address(spoke1), _daiReserveId(spoke1), amount, alice);
@@ -150,8 +188,20 @@ contract TakerPositionManager_Gas_Tests is SpokeBase {
     vm.prank(alice);
     positionManager.approveBorrow(address(spoke1), _daiReserveId(spoke1), bob, borrowAmount);
 
-    Utils.supplyCollateral(spoke1, _daiReserveId(spoke1), alice, aliceSupplyAmount, alice);
-    Utils.supplyCollateral(spoke1, _daiReserveId(spoke1), bob, bobSupplyAmount, bob);
+    SpokeActions.supplyCollateral({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: aliceSupplyAmount,
+      onBehalfOf: alice
+    });
+    SpokeActions.supplyCollateral({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: bob,
+      amount: bobSupplyAmount,
+      onBehalfOf: bob
+    });
 
     vm.prank(bob);
     positionManager.borrowOnBehalfOf(address(spoke1), _daiReserveId(spoke1), borrowAmount, alice);
@@ -203,7 +253,7 @@ contract TakerPositionManager_Gas_Tests is SpokeBase {
     vm.snapshotGasLastCall(NAMESPACE, 'renounceWithdrawAllowance');
   }
 
-  function test_creditDelegation() public {
+  function test_approveBorrow() public {
     uint256 amount = 100e18;
 
     vm.prank(alice);
@@ -211,7 +261,7 @@ contract TakerPositionManager_Gas_Tests is SpokeBase {
     vm.snapshotGasLastCall(NAMESPACE, 'approveBorrow');
   }
 
-  function test_delegateCreditWithSig() public {
+  function test_approveBorrowWithSig() public {
     uint256 amount = 100e18;
 
     vm.prank(alice);
@@ -237,7 +287,7 @@ contract TakerPositionManager_Gas_Tests is SpokeBase {
     vm.snapshotGasLastCall(NAMESPACE, 'approveBorrowWithSig');
   }
 
-  function test_renounceCreditDelegation() public {
+  function test_renounceBorrowAllowance() public {
     uint256 amount = 100e18;
 
     vm.prank(alice);
@@ -257,14 +307,13 @@ contract TakerPositionManager_Gas_Tests is SpokeBase {
 }
 
 /// forge-config: default.isolate = true
-contract ConfigPositionManager_Gas_Tests is SpokeBase {
+contract ConfigPositionManager_Gas_Tests is Base {
   string internal NAMESPACE = 'ConfigPositionManager.Operations';
 
   ConfigPositionManager public positionManager;
 
   function setUp() public virtual override {
-    deployFixtures();
-    initEnvironment();
+    super.setUp();
 
     positionManager = new ConfigPositionManager(address(ADMIN));
 
@@ -282,10 +331,10 @@ contract ConfigPositionManager_Gas_Tests is SpokeBase {
     vm.snapshotGasLastCall(NAMESPACE, 'setGlobalPermission');
   }
 
-  function test_setCanUpdateUsingAsCollateralPermission() public {
+  function test_setCanSetUsingAsCollateralPermission() public {
     vm.prank(alice);
-    positionManager.setCanUpdateUsingAsCollateralPermission(address(spoke1), bob, true);
-    vm.snapshotGasLastCall(NAMESPACE, 'setCanUpdateUsingAsCollateralPermission');
+    positionManager.setCanSetUsingAsCollateralPermission(address(spoke1), bob, true);
+    vm.snapshotGasLastCall(NAMESPACE, 'setCanSetUsingAsCollateralPermission');
   }
 
   function test_setCanUpdateUserRiskPremiumPermission() public {
@@ -311,7 +360,7 @@ contract ConfigPositionManager_Gas_Tests is SpokeBase {
 
   function test_renounceCanUpdateUsingAsCollateralPermission() public {
     vm.prank(alice);
-    positionManager.setCanUpdateUsingAsCollateralPermission(address(spoke1), bob, true);
+    positionManager.setCanSetUsingAsCollateralPermission(address(spoke1), bob, true);
 
     vm.prank(bob);
     positionManager.renounceCanUpdateUsingAsCollateralPermission(address(spoke1), alice);
@@ -354,8 +403,20 @@ contract ConfigPositionManager_Gas_Tests is SpokeBase {
     vm.prank(alice);
     positionManager.setGlobalPermission(address(spoke1), bob, true);
 
-    Utils.supplyCollateral(spoke1, _daiReserveId(spoke1), alice, 100e18, alice);
-    Utils.borrow(spoke1, _daiReserveId(spoke1), alice, 75e18, alice);
+    SpokeActions.supplyCollateral({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: 100e18,
+      onBehalfOf: alice
+    });
+    SpokeActions.borrow({
+      spoke: spoke1,
+      reserveId: _daiReserveId(spoke1),
+      caller: alice,
+      amount: 75e18,
+      onBehalfOf: alice
+    });
 
     vm.prank(bob);
     positionManager.updateUserRiskPremiumOnBehalfOf(address(spoke1), alice);

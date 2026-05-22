@@ -1,18 +1,16 @@
-// SPDX-License-Identifier: UNLICENSED
-// Copyright (c) 2025 Aave Labs
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import 'tests/unit/Spoke/SpokeBase.t.sol';
+import 'tests/setup/Base.t.sol';
 
 /// forge-config: default.isolate = true
-contract SpokeOperations_Gas_Tests is SpokeBase {
+contract SpokeOperations_Gas_Tests is Base {
   string internal NAMESPACE = 'Spoke.Operations';
   ReserveIds internal reserveId;
   ISpoke internal spoke;
 
   function setUp() public virtual override {
-    deployFixtures();
-    initEnvironment();
+    super.setUp();
     spoke = spoke1;
     reserveId = _getReserveIds(spoke);
     _seed();
@@ -130,7 +128,7 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     spoke.repay(reserveId.dai, 200e18, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'repay: partial');
 
-    spoke.repay(reserveId.dai, type(uint256).max, alice);
+    spoke.repay(reserveId.dai, UINT256_MAX, alice);
     vm.snapshotGasLastCall(NAMESPACE, 'repay: full');
     vm.stopPrank();
   }
@@ -139,7 +137,13 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     _liquidationSetup(85_00);
 
     vm.startPrank(bob);
-    spoke.liquidationCall(reserveId.usdx, reserveId.dai, alice, 100_000e18, false);
+    spoke.liquidationCall({
+      collateralReserveId: reserveId.usdx,
+      debtReserveId: reserveId.dai,
+      user: alice,
+      debtToCover: 100_000e18,
+      receiveShares: false
+    });
     vm.snapshotGasLastCall(NAMESPACE, 'liquidationCall: partial');
     vm.stopPrank();
   }
@@ -148,7 +152,13 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     _liquidationSetup(85_00);
 
     vm.startPrank(bob);
-    spoke.liquidationCall(reserveId.usdx, reserveId.dai, alice, UINT256_MAX, false);
+    spoke.liquidationCall({
+      collateralReserveId: reserveId.usdx,
+      debtReserveId: reserveId.dai,
+      user: alice,
+      debtToCover: UINT256_MAX,
+      receiveShares: false
+    });
     vm.snapshotGasLastCall(NAMESPACE, 'liquidationCall: full');
 
     vm.stopPrank();
@@ -158,7 +168,13 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     _liquidationSetup(85_00);
 
     vm.startPrank(bob);
-    spoke.liquidationCall(reserveId.usdx, reserveId.dai, alice, 100_000e18, true);
+    spoke.liquidationCall({
+      collateralReserveId: reserveId.usdx,
+      debtReserveId: reserveId.dai,
+      user: alice,
+      debtToCover: 100_000e18,
+      receiveShares: true
+    });
     vm.snapshotGasLastCall(NAMESPACE, 'liquidationCall (receiveShares): partial');
 
     vm.stopPrank();
@@ -168,7 +184,13 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     _liquidationSetup(85_00);
 
     vm.startPrank(bob);
-    spoke.liquidationCall(reserveId.usdx, reserveId.dai, alice, UINT256_MAX, true);
+    spoke.liquidationCall({
+      collateralReserveId: reserveId.usdx,
+      debtReserveId: reserveId.dai,
+      user: alice,
+      debtToCover: UINT256_MAX,
+      receiveShares: true
+    });
     vm.snapshotGasLastCall(NAMESPACE, 'liquidationCall (receiveShares): full');
 
     vm.stopPrank();
@@ -178,7 +200,13 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     _liquidationSetup(45_00);
 
     vm.startPrank(bob);
-    spoke.liquidationCall(reserveId.usdx, reserveId.dai, alice, UINT256_MAX, false);
+    spoke.liquidationCall({
+      collateralReserveId: reserveId.usdx,
+      debtReserveId: reserveId.dai,
+      user: alice,
+      debtToCover: UINT256_MAX,
+      receiveShares: false
+    });
     vm.snapshotGasLastCall(NAMESPACE, 'liquidationCall (reportDeficit): full');
 
     vm.stopPrank();
@@ -229,7 +257,7 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     spoke.supply(reserveId.wbtc, 1e18, bob);
 
     bytes[] memory calls = new bytes[](2);
-    calls[0] = abi.encodeCall(ISpokeBase.supply, (reserveId.dai, 1000e18, bob));
+    calls[0] = abi.encodeCall(ISpoke.supply, (reserveId.dai, 1000e18, bob));
     calls[1] = abi.encodeCall(ISpoke.setUsingAsCollateral, (reserveId.dai, true, bob));
 
     spoke.multicall(calls);
@@ -249,7 +277,7 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
       ISpoke.permitReserve,
       (reserveId.dai, permit.owner, permit.value, permit.deadline, v, r, s)
     );
-    calls[1] = abi.encodeCall(ISpokeBase.supply, (reserveId.dai, permit.value, permit.owner));
+    calls[1] = abi.encodeCall(ISpoke.supply, (reserveId.dai, permit.value, permit.owner));
     spoke.multicall(calls);
     vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + supply (multicall)');
 
@@ -269,7 +297,7 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
       ISpoke.permitReserve,
       (reserveId.usdx, permit.owner, permit.value, permit.deadline, v, r, s)
     );
-    calls[1] = abi.encodeCall(ISpokeBase.repay, (reserveId.usdx, permit.value, permit.owner));
+    calls[1] = abi.encodeCall(ISpoke.repay, (reserveId.usdx, permit.value, permit.owner));
     spoke.multicall(calls);
     vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + repay (multicall)');
 
@@ -288,7 +316,7 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
       ISpoke.permitReserve,
       (reserveId.wbtc, permit.owner, permit.value, permit.deadline, v, r, s)
     );
-    calls[1] = abi.encodeCall(ISpokeBase.supply, (reserveId.wbtc, permit.value, permit.owner));
+    calls[1] = abi.encodeCall(ISpoke.supply, (reserveId.wbtc, permit.value, permit.owner));
     calls[2] = abi.encodeCall(ISpoke.setUsingAsCollateral, (reserveId.wbtc, true, permit.owner));
     spoke.multicall(calls);
     vm.snapshotGasLastCall(NAMESPACE, 'permitReserve + supply + enable collateral (multicall)');
@@ -300,7 +328,7 @@ contract SpokeOperations_Gas_Tests is SpokeBase {
     (address user, uint256 userPk) = makeAddrAndKey('user');
     address positionManager = makeAddr('positionManager');
     vm.prank(SPOKE_ADMIN);
-    spoke.updatePositionManager(positionManager, true);
+    spoke.updatePositionManager({positionManager: positionManager, active: true});
 
     uint192 nonceKey = 100;
     vm.prank(user);
