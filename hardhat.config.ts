@@ -3,7 +3,7 @@ import hardhatVerify from '@nomicfoundation/hardhat-verify';
 
 // Shared base compiler settings (DRY across profiles)
 const baseCompilerSettings = {
-  optimizer: {enabled: true, runs: 444_444_444_444},
+  optimizer: {enabled: true, runs: 44_444_444},
   evmVersion: 'cancun' as const,
   metadata: {bytecodeHash: 'none' as const},
 };
@@ -27,7 +27,7 @@ export default defineConfig({
         ],
         overrides: {
           // Hub profile: via_ir = true, optimizer_runs = 22300
-          'src/hub/Hub.sol': {
+          'src/hub/instances/HubInstance.sol': {
             version: '0.8.28',
             settings: {
               ...baseCompilerSettings,
@@ -44,7 +44,7 @@ export default defineConfig({
               viaIR: true,
             },
           },
-          // Tests profile: via_ir = false, optimizer_runs = 444444444444
+          // Tests profile: via_ir = false, optimizer_runs = 44444444
           // TODO: Foundry uses glob `tests/**` for compilation_restrictions.
           //       Hardhat does not support glob patterns in overrides.
           //       See: https://github.com/NomicFoundation/hardhat/issues/4686
@@ -80,9 +80,13 @@ export default defineConfig({
       // equivalent — Hardhat profiles only cover compiler settings, not test settings.
       // Use env vars or CLI args to override fuzz runs in CI.
 
-      // fs_permissions: read access to tests/mocks/JsonBindings.sol
+      // fs_permissions — mirrors foundry.toml entries.
+      // - readFile: single-file exact match
+      // - readDirectory / dangerouslyReadWriteDirectory: prefix match (recursive)
       fsPermissions: {
-        readFile: ['./tests/mocks/JsonBindings.sol'],
+        readFile: ['./tests/helpers/mocks/JsonBindings.sol'],
+        readDirectory: ['./config', './out'],
+        dangerouslyReadWriteDirectory: ['./output'],
       },
 
       // gas_limit = 1099511627776 (must be bigint)
@@ -102,7 +106,7 @@ export default defineConfig({
       // at files containing EIP-712 struct definitions. The project consolidates them in
       // tests/mocks/EIP712Types.sol (matches `forge bind-json` source).
       eip712Types: {
-        include: ['tests/mocks/EIP712Types.sol'],
+        include: ['tests/helpers/mocks/EIP712Types.sol'],
       },
     },
   },
@@ -144,6 +148,7 @@ export default defineConfig({
     gnosis: {type: 'http', chainId: 100, url: configVariable('RPC_GNOSIS')},
     bnb: {type: 'http', chainId: 56, url: configVariable('RPC_BNB')},
     celo: {type: 'http', chainId: 42220, url: configVariable('RPC_CELO')},
+    anvil: {type: 'http', chainId: 31337, url: 'http://127.0.0.1:8545'},
   },
 
   // Etherscan verification — Hardhat 3 uses Etherscan API v2 which requires a single API key
