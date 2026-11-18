@@ -96,14 +96,9 @@ export default defineConfig({
       // Safe: only affects vm.expectRevert on internal calls.
       allowInternalExpectRevert: true,
 
-      // eip712Types — required for vm.eip712HashStruct / vm.eip712HashType cheatcodes
-      // (added in EDR 0.12.0-next.32 / Hardhat 3.5.0). Unlike Foundry, which auto-discovers
-      // structs from all compiled artifacts, Hardhat 3 requires explicit include globs pointing
-      // at files containing EIP-712 struct definitions. The project consolidates them in
-      // tests/mocks/EIP712Types.sol (matches `forge bind-json` source).
-      eip712Types: {
-        include: ['tests/mocks/EIP712Types.sol'],
-      },
+      // vm.eip712HashStruct / vm.eip712HashType resolve struct names from the running
+      // test's own source and its imports, so the EIP712Types library in
+      // tests/mocks/EIP712Types.sol needs no `eip712Types` setting to be found.
     },
   },
 
